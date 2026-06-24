@@ -43,13 +43,14 @@ const PLANS = {
 };
 
 // ─────────────────────────── Админы ───────────────────────────
-// ADMIN_USERS = список username/email через запятую (в окружении Render).
-const ADMIN_USERS = (process.env.ADMIN_USERS || '')
+// ADMIN_EMAILS = список email через запятую (в окружении Render). Админ
+// определяется ТОЛЬКО по почте — ник не важен. (ADMIN_USERS поддержан как
+// запасной вариант, если задавали раньше.)
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || process.env.ADMIN_USERS || '')
   .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 function isAdmin(user) {
   if (!user) return false;
-  return ADMIN_USERS.includes(String(user.username || '').toLowerCase())
-      || ADMIN_USERS.includes(String(user.email || '').toLowerCase());
+  return ADMIN_EMAILS.includes(String(user.email || '').toLowerCase());
 }
 
 // ─────────────────────────── Middleware ───────────────────────────
