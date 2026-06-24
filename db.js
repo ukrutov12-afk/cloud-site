@@ -94,6 +94,17 @@ const pgApi = {
   async getOrdersByUser(userId) {
     const { rows } = await pg.query('SELECT * FROM orders WHERE user_id=$1 ORDER BY created_at DESC', [userId]);
     return rows.map(rowOrder);
+  },
+  async getAllUsers() {
+    const { rows } = await pg.query('SELECT * FROM users ORDER BY created_at DESC');
+    return rows.map(rowUser);
+  },
+  async getAllOrders() {
+    const { rows } = await pg.query('SELECT * FROM orders ORDER BY created_at DESC');
+    return rows.map(rowOrder);
+  },
+  async setOrderStatus(orderId, status) {
+    await pg.query('UPDATE orders SET status=$1 WHERE id=$2', [status, orderId]);
   }
 };
 
@@ -144,6 +155,17 @@ const fileApi = {
   async getOrdersByUser(userId) {
     return readJSON(ORDERS_FILE).filter(o => o.userId === userId)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+  async getAllUsers() {
+    return readJSON(USERS_FILE).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+  async getAllOrders() {
+    return readJSON(ORDERS_FILE).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+  async setOrderStatus(orderId, status) {
+    const orders = readJSON(ORDERS_FILE);
+    const i = orders.findIndex(o => o.id === orderId);
+    if (i !== -1) { orders[i].status = status; writeJSON(ORDERS_FILE, orders); }
   }
 };
 

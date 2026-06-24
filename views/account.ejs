@@ -14,10 +14,17 @@
       </div>
       <div class="acc-plan">
         <span class="muted"><%= t('account.your_plan') %></span>
-        <% var paid = orders.find(function(o){return o.status==='paid'}); var anyOrder = orders[0]; %>
-        <strong><%= anyOrder ? t('pricing.' + anyOrder.plan + '_t') : t('account.no_plan') %></strong>
+        <strong>
+          <%= effectivePlan ? t('pricing.' + effectivePlan + '_t') : t('account.no_plan') %>
+          <% if (admin) { %><span class="admin-badge">ADMIN ∞</span><% } %>
+        </strong>
       </div>
-      <a href="#" class="btn btn-primary btn-block"><%= t('account.download') %></a>
+      <% if (effectivePlan) { %>
+        <a href="#" class="btn btn-primary btn-block"><%= t('account.download') %></a>
+      <% } else { %>
+        <a href="/buy" class="btn btn-primary btn-block"><%= t('nav.buy') %></a>
+      <% } %>
+      <% if (admin) { %><a href="/admin" class="btn btn-ghost btn-block" style="margin-top:10px">⚙ Admin Panel</a><% } %>
     </div>
 
     <div class="panel">

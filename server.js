@@ -42,6 +42,16 @@ const PLANS = {
   lifetime: { id: 'lifetime', price: 39, currency: 'EUR', months: 0 }
 };
 
+// ─────────────────────────── Админы ───────────────────────────
+// ADMIN_USERS = список username/email через запятую (в окружении Render).
+const ADMIN_USERS = (process.env.ADMIN_USERS || '')
+  .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+function isAdmin(user) {
+  if (!user) return false;
+  return ADMIN_USERS.includes(String(user.username || '').toLowerCase())
+      || ADMIN_USERS.includes(String(user.email || '').toLowerCase());
+}
+
 // ─────────────────────────── Middleware ───────────────────────────
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -90,6 +100,7 @@ app.use(async (req, res, next) => {
     res.locals.t = (k) => t(lang, k);
     res.locals.plans = PLANS;
     res.locals.user = req.session.userId ? await db.findById(req.session.userId) : null;
+    res.locals.isAdmin = isAdmin(res.locals.user);
 
     // флеш-сообщения (одноразовые)
     res.locals.flash = req.session.flash || null;
@@ -107,6 +118,14 @@ function rerr(res, key) { res.locals.flash = { type: 'error', key }; }
 function requireAuth(req, res, next) {
   if (!req.session.userId) { flash(req, 'error', 'flash.err_login_required'); return res.redirect('/login'); }
   next();
+}
+async function requireAdmin(req, res, next) {
+  try {
+    const user = req.session.userId ? await db.findById(req.session.userId) : null;
+    if (!isAdmin(user)) return res.status(404).render('404', { page: '404' });
+    req.adminUser = user;
+    next();
+  } catch (e) { next(e); }
 }
 const isEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || ''));
 
@@ -202,7 +221,81 @@ app.get('/account', requireAuth, async (req, res, next) => {
     const user = await db.findById(req.session.userId);
     if (!user) { req.session.userId = null; return res.redirect('/login'); }
     const orders = await db.getOrdersByUser(user.id);
-    res.render('account', { page: 'account', account: user, orders });
+    // админ = вечный тариф автоматически
+    const effectivePlan = isAdmin(user) ? 'lifetime'
+      : (orders[0] ? orders[0].plan : null);
+    res.render('account', { page: 'account', account: user, orders, effectivePlan, admin: isAdmin(user) });
+  } catch (e) { next(e); }
+});
+
+// ───────────────────────── Админ-панель ─────────────────────────
+app.get('/admin', requireAdmin, async (req, res, next) => {
+  try {
+    const users = await db.getAllUsers();
+    const orders = await db.getAllOrders();
+    const paid = orders.filter(o => o.status === 'paid');
+    const revenue = paid.reduce((s, o) => s + Number(o.price || 0), 0);
+    const mem = process.memoryUsage();
+    const stats = {
+      users: users.length,
+      orders: orders.length,
+      paid: paid.length,
+      pending: orders.length - paid.length,
+      revenue,
+      admins: users.filter(isAdmin).length,
+      uptimeSec: Math.floor(process.uptime()),
+      rssMb: (mem.rss / 1048576).toFixed(1),
+      heapMb: (mem.heapUsed / 1048576).toFixed(1),
+      node: process.version,
+      backend: db.backend,
+      now: new Date().toISOString()
+    };
+    res.render('admin', {
+      page: 'admin',
+      stats,
+      users: users.slice(0, 50),
+      orders: orders.slice(0, 50),
+      isAdminFn: isAdmin
+    });
+  } catch (e) { next(e); }
+});
+
+// выдать тариф пользователю (создаёт оплаченный заказ)
+app.post('/admin/grant', requireAdmin, async (req, res, next) => {
+  try {
+    const { userId, plan } = req.body;
+    const p = PLANS[plan] || PLANS.lifetime;
+    const order = await db.createOrder({ userId, plan: p.id, price: p.price, currency: p.currency });
+    await db.setOrderStatus(order.id, 'paid');
+    res.redirect('/admin');
+  } catch (e) { next(e); }
+});
+
+// пометить заказ оплаченным / в ожидании
+app.post('/admin/order/:id/:status', requireAdmin, async (req, res, next) => {
+  try {
+    const st = req.params.status === 'paid' ? 'paid' : 'pending';
+    await db.setOrderStatus(req.params.id, st);
+    res.redirect('/admin');
+  } catch (e) { next(e); }
+});
+
+// JSON для живого мониторинга (автообновление на странице)
+app.get('/admin/stats.json', requireAdmin, async (req, res, next) => {
+  try {
+    const users = await db.getAllUsers();
+    const orders = await db.getAllOrders();
+    const paid = orders.filter(o => o.status === 'paid');
+    const mem = process.memoryUsage();
+    res.json({
+      users: users.length, orders: orders.length, paid: paid.length,
+      pending: orders.length - paid.length,
+      revenue: paid.reduce((s, o) => s + Number(o.price || 0), 0),
+      uptimeSec: Math.floor(process.uptime()),
+      rssMb: +(mem.rss / 1048576).toFixed(1),
+      heapMb: +(mem.heapUsed / 1048576).toFixed(1),
+      now: new Date().toISOString()
+    });
   } catch (e) { next(e); }
 });
 

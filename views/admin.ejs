@@ -1,0 +1,116 @@
+<%- include('partials/header', { pageTitle: 'Cloud — Admin' }) %>
+
+<section class="section">
+  <div class="admin-head">
+    <h2 class="section-title" style="text-align:left;margin:0">⚙ Admin · Мониторинг</h2>
+    <span class="muted small">backend: <%= stats.backend %> · node <%= stats.node %> · <span id="clock"><%= stats.now %></span></span>
+  </div>
+
+  <!-- метрики -->
+  <div class="stat-grid">
+    <div class="stat-card"><span class="stat-k">Пользователи</span><b id="m-users"><%= stats.users %></b></div>
+    <div class="stat-card"><span class="stat-k">Заказы</span><b id="m-orders"><%= stats.orders %></b></div>
+    <div class="stat-card good"><span class="stat-k">Оплачено</span><b id="m-paid"><%= stats.paid %></b></div>
+    <div class="stat-card warn"><span class="stat-k">В ожидании</span><b id="m-pending"><%= stats.pending %></b></div>
+    <div class="stat-card accent"><span class="stat-k">Выручка</span><b>€<span id="m-rev"><%= stats.revenue %></span></b></div>
+    <div class="stat-card"><span class="stat-k">Админы</span><b><%= stats.admins %></b></div>
+  </div>
+
+  <!-- мониторинг сервера -->
+  <div class="panel" style="margin-bottom:22px">
+    <h3 class="panel-h">Сервер (live)</h3>
+    <div class="mon-grid">
+      <div><span class="muted small">Uptime</span><div class="mon-v" id="m-up"><%= stats.uptimeSec %>s</div></div>
+      <div><span class="muted small">RAM (RSS)</span><div class="mon-v" id="m-rss"><%= stats.rssMb %> MB</div></div>
+      <div><span class="muted small">Heap</span><div class="mon-v" id="m-heap"><%= stats.heapMb %> MB</div></div>
+      <div><span class="muted small">DB</span><div class="mon-v"><%= stats.backend %></div></div>
+    </div>
+    <p class="muted small" style="margin-top:10px">Обновляется автоматически каждые 5 сек.</p>
+  </div>
+
+  <!-- пользователи -->
+  <div class="panel" style="margin-bottom:22px">
+    <h3 class="panel-h">Пользователи (<%= users.length %> последних)</h3>
+    <div class="tbl-wrap">
+      <table class="admin-tbl">
+        <thead><tr><th>Username</th><th>Email</th><th>Регистрация</th><th>Роль</th><th>Выдать тариф</th></tr></thead>
+        <tbody>
+          <% users.forEach(function(u){ %>
+            <tr>
+              <td><%= u.username %></td>
+              <td class="muted"><%= u.email %></td>
+              <td class="muted small"><%= new Date(u.createdAt).toLocaleString() %></td>
+              <td><% if (isAdminFn(u)) { %><span class="admin-badge">ADMIN</span><% } else { %><span class="muted small">user</span><% } %></td>
+              <td>
+                <form action="/admin/grant" method="post" class="grant-form">
+                  <input type="hidden" name="userId" value="<%= u.id %>">
+                  <select name="plan">
+                    <option value="lifetime">Навсегда</option>
+                    <option value="season">Сезон</option>
+                    <option value="month">Месяц</option>
+                  </select>
+                  <button type="submit" class="btn-mini">Выдать</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+          <% if (!users.length) { %><tr><td colspan="5" class="muted">Пусто</td></tr><% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- заказы -->
+  <div class="panel">
+    <h3 class="panel-h">Заказы (<%= orders.length %> последних)</h3>
+    <div class="tbl-wrap">
+      <table class="admin-tbl">
+        <thead><tr><th>ID</th><th>User</th><th>Тариф</th><th>Сумма</th><th>Статус</th><th>Дата</th><th></th></tr></thead>
+        <tbody>
+          <% orders.forEach(function(o){ %>
+            <tr>
+              <td class="muted small"><%= o.id %></td>
+              <td class="muted small"><%= o.userId %></td>
+              <td><%= o.plan %></td>
+              <td>€<%= o.price %></td>
+              <td><span class="status status-<%= o.status %>"><%= o.status %></span></td>
+              <td class="muted small"><%= new Date(o.createdAt).toLocaleString() %></td>
+              <td>
+                <% if (o.status !== 'paid') { %>
+                  <form action="/admin/order/<%= o.id %>/paid" method="post"><button class="btn-mini">✓ оплачен</button></form>
+                <% } else { %>
+                  <form action="/admin/order/<%= o.id %>/pending" method="post"><button class="btn-mini ghost">↺ сброс</button></form>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+          <% if (!orders.length) { %><tr><td colspan="7" class="muted">Пусто</td></tr><% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<script>
+  // живой мониторинг
+  function fmtUp(s){ var h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60; return (h?h+'ч ':'')+(m?m+'м ':'')+ss+'с'; }
+  async function poll(){
+    try{
+      const r = await fetch('/admin/stats.json',{cache:'no-store'});
+      if(!r.ok) return;
+      const d = await r.json();
+      document.getElementById('m-users').textContent = d.users;
+      document.getElementById('m-orders').textContent = d.orders;
+      document.getElementById('m-paid').textContent = d.paid;
+      document.getElementById('m-pending').textContent = d.pending;
+      document.getElementById('m-rev').textContent = d.revenue;
+      document.getElementById('m-up').textContent = fmtUp(d.uptimeSec);
+      document.getElementById('m-rss').textContent = d.rssMb + ' MB';
+      document.getElementById('m-heap').textContent = d.heapMb + ' MB';
+      document.getElementById('clock').textContent = new Date(d.now).toLocaleString();
+    }catch(e){}
+  }
+  poll(); setInterval(poll, 5000);
+</script>
+
+<%- include('partials/footer') %>
