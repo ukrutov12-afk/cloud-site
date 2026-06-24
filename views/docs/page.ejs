@@ -1,0 +1,22 @@
+<%- include('../partials/header', { pageTitle: 'Cloud — ' + t('docs.' + doc) }) %>
+
+<section class="section docs-layout">
+  <aside class="docs-nav panel">
+    <h4><%= t('docs.title') %></h4>
+    <a href="/docs/terms"   class="<%= doc==='terms'   ? 'sel' : '' %>"><%= t('docs.terms') %></a>
+    <a href="/docs/privacy" class="<%= doc==='privacy' ? 'sel' : '' %>"><%= t('docs.privacy') %></a>
+    <a href="/docs/refund"  class="<%= doc==='refund'  ? 'sel' : '' %>"><%= t('docs.refund') %></a>
+  </aside>
+
+  <article class="docs-body panel">
+    <div class="docs-head">
+      <h1><%= t('docs.' + doc) %></h1>
+      <span class="muted small"><%= t('docs.updated') %>: 2026-06-24</span>
+    </div>
+    <div class="docs-content">
+      <%- body %>
+    </div>
+  </article>
+</section>
+
+<%- include('../partials/footer') %>

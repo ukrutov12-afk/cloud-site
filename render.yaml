@@ -1,0 +1,19 @@
+# Render Blueprint — заливай репозиторий, Render подхватит этот файл.
+# Free-тариф: ФС эфемерная → для постоянных аккаунтов задай DATABASE_URL
+# (бесплатный Postgres: Neon/Supabase) в Environment сервиса на Render.
+services:
+  - type: web
+    name: cloud-site
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SITE_URL
+        value: https://cloudlegit.work.gd
+      - key: SESSION_SECRET
+        generateValue: true   # Render сам сгенерит секрет
+      # - key: DATABASE_URL     # вставь строку подключения Postgres (Neon/Supabase)
+      #   sync: false

@@ -1,0 +1,35 @@
+<%- include('partials/header', { pageTitle: 'Cloud — ' + t('support.title') }) %>
+
+<section class="section narrow">
+  <h2 class="section-title"><%= t('support.title') %></h2>
+  <p class="section-sub"><%= t('support.subtitle') %></p>
+
+  <div class="support-grid">
+    <div class="panel">
+      <h3 class="panel-h"><%= t('support.faq') %></h3>
+      <% [1,2,3,4].forEach(function(i){ %>
+        <details class="faq">
+          <summary><%= t('support.q' + i) %></summary>
+          <p><%= t('support.a' + i) %></p>
+        </details>
+      <% }); %>
+    </div>
+
+    <div class="panel">
+      <h3 class="panel-h"><%= t('support.contact_title') %></h3>
+      <% if (sent) { %><div class="notice success"><%= t('support.sent') %></div><% } %>
+      <form action="/support" method="post" class="form">
+        <label class="field"><span><%= t('support.name') %></span><input type="text" name="name" required></label>
+        <label class="field"><span><%= t('support.email_us') %></span><input type="email" name="email" required></label>
+        <label class="field"><span><%= t('support.message') %></span><textarea name="message" rows="4" required></textarea></label>
+        <button type="submit" class="btn btn-primary btn-block"><%= t('support.send') %></button>
+      </form>
+      <div class="contact-links">
+        <a href="https://discord.gg/" class="contact-link">💬 <%= t('support.discord') %></a>
+        <a href="mailto:support@cloud-client.app" class="contact-link">✉️ support@cloud-client.app</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

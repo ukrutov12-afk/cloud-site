@@ -1,0 +1,43 @@
+<%- include('partials/header', { pageTitle: 'Cloud — ' + t('account.title') }) %>
+
+<section class="section narrow">
+  <h2 class="section-title"><%= t('account.title') %></h2>
+
+  <div class="account-grid">
+    <div class="panel">
+      <div class="acc-head">
+        <div class="acc-avatar"><%= (account.username||'C').charAt(0).toUpperCase() %></div>
+        <div>
+          <div class="acc-hi"><%= t('account.welcome') %>, <strong><%= account.username %></strong></div>
+          <div class="muted small"><%= account.email %></div>
+        </div>
+      </div>
+      <div class="acc-plan">
+        <span class="muted"><%= t('account.your_plan') %></span>
+        <% var paid = orders.find(function(o){return o.status==='paid'}); var anyOrder = orders[0]; %>
+        <strong><%= anyOrder ? t('pricing.' + anyOrder.plan + '_t') : t('account.no_plan') %></strong>
+      </div>
+      <a href="#" class="btn btn-primary btn-block"><%= t('account.download') %></a>
+    </div>
+
+    <div class="panel">
+      <h3 class="panel-h"><%= t('account.orders') %></h3>
+      <% if (!orders.length) { %>
+        <p class="muted"><%= t('account.no_orders') %></p>
+      <% } else { %>
+        <table class="orders">
+          <% orders.forEach(function(o){ %>
+            <tr>
+              <td><%= t('pricing.' + o.plan + '_t') %></td>
+              <td>€<%= o.price %></td>
+              <td><span class="status status-<%= o.status %>"><%= o.status==='paid' ? t('account.status_paid') : t('account.status_pending') %></span></td>
+              <td class="muted small"><%= new Date(o.createdAt).toLocaleDateString() %></td>
+            </tr>
+          <% }); %>
+        </table>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

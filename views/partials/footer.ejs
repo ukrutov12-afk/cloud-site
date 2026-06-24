@@ -1,0 +1,34 @@
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="brand"><span class="brand-mark"></span><span class="brand-text">Cloud</span></div>
+        <p class="footer-made"><%= t('footer.made') %></p>
+      </div>
+      <div class="footer-col">
+        <h4><%= t('footer.nav') %></h4>
+        <a href="/"><%= t('nav.home') %></a>
+        <a href="/buy"><%= t('nav.buy') %></a>
+        <a href="/support"><%= t('nav.support') %></a>
+      </div>
+      <div class="footer-col">
+        <h4><%= t('footer.docs') %></h4>
+        <a href="/docs/terms"><%= t('docs.terms') %></a>
+        <a href="/docs/privacy"><%= t('docs.privacy') %></a>
+        <a href="/docs/refund"><%= t('docs.refund') %></a>
+      </div>
+      <div class="footer-col">
+        <h4><%= t('footer.contacts') %></h4>
+        <a href="/support"><%= t('support.discord') %></a>
+        <a href="/support"><%= t('support.email_us') %></a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <%= new Date().getFullYear() %> Cloud Client. <%= t('footer.rights') %>.</span>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

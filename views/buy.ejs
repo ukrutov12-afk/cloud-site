@@ -1,0 +1,44 @@
+<%- include('partials/header', { pageTitle: 'Cloud — ' + t('buy.title') }) %>
+
+<section class="section narrow">
+  <h2 class="section-title"><%= t('buy.title') %></h2>
+
+  <div class="checkout">
+    <div class="checkout-main panel">
+      <h3 class="panel-h"><%= t('buy.choose_plan') %></h3>
+      <div class="plan-picker">
+        <% Object.values(plans).forEach(function(p){ %>
+          <a href="/buy?plan=<%= p.id %>" class="plan-opt <%= p.id===plan.id ? 'sel' : '' %>">
+            <span class="po-name"><%= t('pricing.' + p.id + '_t') %></span>
+            <span class="po-price">€<%= p.price %></span>
+          </a>
+        <% }); %>
+      </div>
+
+      <% if (!user) { %>
+        <div class="notice"><%= t('buy.need_login') %></div>
+        <div class="row-gap">
+          <a href="/login" class="btn btn-primary"><%= t('nav.login') %></a>
+          <a href="/register" class="btn btn-ghost"><%= t('nav.register') %></a>
+        </div>
+      <% } else { %>
+        <form action="/buy" method="post">
+          <input type="hidden" name="plan" value="<%= plan.id %>">
+          <button type="submit" class="btn btn-primary btn-lg btn-block"><%= t('buy.pay_btn') %></button>
+        </form>
+      <% } %>
+      <p class="muted small"><%= t('buy.note') %></p>
+    </div>
+
+    <aside class="checkout-side panel">
+      <h3 class="panel-h"><%= t('buy.summary') %></h3>
+      <div class="sum-row"><span><%= t('pricing.' + plan.id + '_t') %></span><span>€<%= plan.price %></span></div>
+      <div class="sum-total"><span><%= t('buy.summary') %></span><strong>€<%= plan.price %></strong></div>
+      <ul class="price-feats">
+        <% (Array.isArray(t('pricing.'+plan.id+'_f'))?t('pricing.'+plan.id+'_f'):[]).forEach(function(ft){ %><li><%= ft %></li><% }); %>
+      </ul>
+    </aside>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

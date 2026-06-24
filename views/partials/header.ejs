@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Cloud Client' %></title>
+  <meta name="description" content="Cloud — Minecraft 1.21.4 Fabric client. Liquid Glass UI.">
+  <link rel="canonical" href="<%= siteUrl %><%= currentPath %>">
+  <meta property="og:title" content="<%= typeof pageTitle !== 'undefined' ? pageTitle : 'Cloud Client' %>">
+  <meta property="og:description" content="Minecraft 1.21.4 Fabric client — Liquid Glass UI, clean bypasses, rich HUD.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="<%= siteUrl %><%= currentPath %>">
+  <meta name="theme-color" content="#070a12">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="/">
+        <span class="brand-mark"></span>
+        <span class="brand-text">Cloud</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="/" class="<%= page==='home' ? 'active' : '' %>"><%= t('nav.home') %></a>
+        <a href="/buy" class="<%= page==='buy' ? 'active' : '' %>"><%= t('nav.buy') %></a>
+        <a href="/docs/terms" class="<%= page==='docs' ? 'active' : '' %>"><%= t('nav.docs') %></a>
+        <a href="/support" class="<%= page==='support' ? 'active' : '' %>"><%= t('nav.support') %></a>
+      </nav>
+
+      <div class="nav-right">
+        <!-- Выбор языка -->
+        <div class="lang" tabindex="0">
+          <button class="lang-btn" type="button">
+            <span class="globe">🌐</span>
+            <span><%= lang.toUpperCase() %></span>
+            <span class="chev">▾</span>
+          </button>
+          <div class="lang-menu">
+            <% langs.forEach(function(l){ %>
+              <a href="?lang=<%= l.code %>" class="<%= l.code===lang ? 'sel' : '' %>"><%= l.name %> <small><%= l.code.toUpperCase() %></small></a>
+            <% }); %>
+          </div>
+        </div>
+
+        <% if (user) { %>
+          <a href="/account" class="btn btn-ghost"><%= t('nav.account') %></a>
+          <form action="/logout" method="post" style="display:inline">
+            <button class="btn btn-ghost" type="submit"><%= t('nav.logout') %></button>
+          </form>
+        <% } else { %>
+          <a href="/login" class="btn btn-ghost"><%= t('nav.login') %></a>
+          <a href="/register" class="btn btn-primary"><%= t('nav.register') %></a>
+        <% } %>
+      </div>
+
+      <button class="burger" type="button" aria-label="menu"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="nav-mobile">
+      <a href="/"><%= t('nav.home') %></a>
+      <a href="/buy"><%= t('nav.buy') %></a>
+      <a href="/docs/terms"><%= t('nav.docs') %></a>
+      <a href="/support"><%= t('nav.support') %></a>
+      <% if (user) { %><a href="/account"><%= t('nav.account') %></a><% } else { %>
+      <a href="/login"><%= t('nav.login') %></a><a href="/register"><%= t('nav.register') %></a><% } %>
+    </nav>
+  </header>
+
+  <% if (flash) { %>
+    <div class="flash flash-<%= flash.type %>"><%= t(flash.key) %></div>
+  <% } %>
+
+  <main class="main">

@@ -1,0 +1,129 @@
+{
+  "lang_name": "English",
+  "nav": {
+    "home": "Home",
+    "buy": "Buy",
+    "docs": "Docs",
+    "support": "Support",
+    "login": "Log in",
+    "register": "Sign up",
+    "account": "Account",
+    "logout": "Log out"
+  },
+  "hero": {
+    "badge": "Minecraft 1.21.4 • Fabric",
+    "title": "Cloud — a client that feels the game",
+    "subtitle": "Smooth Liquid Glass interface, clean bypasses, thoughtful modules. Built for people who care about quality.",
+    "cta_buy": "Buy the client",
+    "cta_docs": "Documentation",
+    "stat_users": "active players",
+    "stat_uptime": "uptime",
+    "stat_modules": "modules"
+  },
+  "features": {
+    "title": "Why Cloud",
+    "f1_t": "Liquid Glass UI",
+    "f1_d": "Real shader-based background blur, highlights and glass panels. An interface that's a pleasure to open.",
+    "f2_t": "Subtle bypasses",
+    "f2_d": "Careful rotations, movement correction, behavior tuned for popular anti-cheats. No needless flags.",
+    "f3_t": "Rich HUD",
+    "f3_d": "Custom elements: binds, target HUD, armor, totems, media player — all draggable and scalable.",
+    "f4_t": "Frequent updates",
+    "f4_d": "Support for current versions, fast fixes, an open channel with changelogs."
+  },
+  "pricing": {
+    "title": "Pricing",
+    "subtitle": "One client — pick a term. One-time payment, no trap subscriptions.",
+    "most_popular": "Popular",
+    "per_month": "/ mo",
+    "buy_btn": "Buy",
+    "month_t": "Month",
+    "month_f": ["All modules", "All updates this month", "Discord support"],
+    "season_t": "Season (3 mo)",
+    "season_f": ["All modules", "Priority updates", "Priority support"],
+    "lifetime_t": "Lifetime",
+    "lifetime_f": ["All modules forever", "All future updates", "VIP support", "Early access to betas"]
+  },
+  "buy": {
+    "title": "Checkout",
+    "choose_plan": "Selected plan",
+    "need_login": "Please log in or sign up to complete the purchase.",
+    "pay_btn": "Proceed to payment",
+    "note": "After payment the key appears in your account. Refunds follow the refund policy.",
+    "order_created": "Order created. This is a demo payment flow.",
+    "summary": "Total"
+  },
+  "auth": {
+    "login_title": "Log in to your account",
+    "register_title": "Create an account",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "password2": "Repeat password",
+    "login_btn": "Log in",
+    "register_btn": "Sign up",
+    "have_account": "Already have an account?",
+    "no_account": "No account yet?",
+    "or_login": "Log in",
+    "or_register": "Sign up",
+    "remember": "Remember me"
+  },
+  "account": {
+    "title": "Account",
+    "welcome": "Hi",
+    "your_plan": "Your plan",
+    "no_plan": "No active plan",
+    "orders": "Order history",
+    "no_orders": "No orders yet",
+    "download": "Download client",
+    "status_pending": "awaiting payment",
+    "status_paid": "paid"
+  },
+  "support": {
+    "title": "Support",
+    "subtitle": "Didn't find an answer? Write to us — we reply fast.",
+    "faq": "FAQ",
+    "q1": "How do I install the client?",
+    "a1": "Download the .jar from your account, drop it into the mods folder next to Fabric Loader for 1.21.4, and launch via the Fabric profile.",
+    "q2": "Are other versions supported?",
+    "a2": "The main version right now is 1.21.4. Support for newer versions is added as they release.",
+    "q3": "Can I get banned?",
+    "a3": "Any third-party software carries risk. We keep bypasses careful, but no one can guarantee safety.",
+    "q4": "How do refunds work?",
+    "a4": "Within the period in the refund policy if the client is technically non-functional. See the Refund Policy for details.",
+    "contact_title": "Contact us",
+    "name": "Name",
+    "message": "Message",
+    "send": "Send",
+    "sent": "Message sent. Thank you!",
+    "discord": "Discord server",
+    "email_us": "Email"
+  },
+  "docs": {
+    "title": "Documentation",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "refund": "Refund Policy",
+    "updated": "Updated"
+  },
+  "footer": {
+    "made": "Made with attention to detail",
+    "rights": "All rights reserved",
+    "docs": "Documents",
+    "nav": "Navigation",
+    "contacts": "Contacts"
+  },
+  "flash": {
+    "registered": "Account created. Welcome!",
+    "logged_in": "You are logged in.",
+    "logged_out": "You have logged out.",
+    "err_fields": "Please fill in all fields.",
+    "err_email": "Enter a valid email.",
+    "err_pass_short": "Password must be at least 6 characters.",
+    "err_pass_match": "Passwords do not match.",
+    "err_email_taken": "This email is already registered.",
+    "err_user_taken": "This username is taken.",
+    "err_creds": "Wrong email or password.",
+    "err_login_required": "Please log in first."
+  }
+}

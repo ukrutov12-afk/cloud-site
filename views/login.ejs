@@ -1,0 +1,21 @@
+<%- include('partials/header', { pageTitle: 'Cloud — ' + t('auth.login_title') }) %>
+
+<section class="section auth-wrap">
+  <div class="auth-card panel">
+    <h2 class="auth-title"><%= t('auth.login_title') %></h2>
+    <form action="/login" method="post" class="form">
+      <label class="field">
+        <span><%= t('auth.email') %></span>
+        <input type="email" name="email" value="<%= form.email || '' %>" required autocomplete="email">
+      </label>
+      <label class="field">
+        <span><%= t('auth.password') %></span>
+        <input type="password" name="password" required autocomplete="current-password">
+      </label>
+      <button type="submit" class="btn btn-primary btn-block btn-lg"><%= t('auth.login_btn') %></button>
+    </form>
+    <p class="auth-alt"><%= t('auth.no_account') %> <a href="/register"><%= t('auth.or_register') %></a></p>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

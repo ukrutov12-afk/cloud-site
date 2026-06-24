@@ -1,0 +1,72 @@
+<%- include('partials/header', { pageTitle: 'Cloud Client — ' + t('nav.home') }) %>
+
+<section class="hero">
+  <div class="hero-content">
+    <span class="badge"><%= t('hero.badge') %></span>
+    <h1 class="hero-title"><%= t('hero.title') %></h1>
+    <p class="hero-sub"><%= t('hero.subtitle') %></p>
+    <div class="hero-cta">
+      <a href="/buy" class="btn btn-primary btn-lg"><%= t('hero.cta_buy') %></a>
+      <a href="/docs/terms" class="btn btn-ghost btn-lg"><%= t('hero.cta_docs') %></a>
+    </div>
+    <div class="hero-stats">
+      <div><strong>12k+</strong><span><%= t('hero.stat_users') %></span></div>
+      <div><strong>99.9%</strong><span><%= t('hero.stat_uptime') %></span></div>
+      <div><strong>40+</strong><span><%= t('hero.stat_modules') %></span></div>
+    </div>
+  </div>
+  <div class="hero-glass">
+    <div class="glass-card">
+      <div class="glass-head">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <em>Cloud — Combat</em>
+      </div>
+      <div class="glass-rows">
+        <div class="grow"><span>Attack Aura</span><i class="sw on"></i></div>
+        <div class="grow"><span>Triggerbot</span><i class="sw"></i></div>
+        <div class="grow"><span>Player ESP</span><i class="sw on"></i></div>
+        <div class="grow"><span>Auto Totem</span><i class="sw on"></i></div>
+        <div class="grow"><span>Fullbright</span><i class="sw"></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features section">
+  <h2 class="section-title"><%= t('features.title') %></h2>
+  <div class="feature-grid">
+    <% [['🪟','f1'],['🛡️','f2'],['🎛️','f3'],['🚀','f4']].forEach(function(f){ %>
+      <div class="feature-card">
+        <div class="feature-ico"><%= f[0] %></div>
+        <h3><%= t('features.' + f[1] + '_t') %></h3>
+        <p><%= t('features.' + f[1] + '_d') %></p>
+      </div>
+    <% }); %>
+  </div>
+</section>
+
+<section class="pricing section" id="pricing">
+  <h2 class="section-title"><%= t('pricing.title') %></h2>
+  <p class="section-sub"><%= t('pricing.subtitle') %></p>
+  <div class="price-grid">
+    <% Object.values(plans).forEach(function(p){
+         const key = p.id;
+         const feats = t('pricing.' + key + '_f');
+         const perMo = p.months > 0 ? (p.price / p.months) : null; %>
+      <div class="price-card <%= p.popular ? 'popular' : '' %>">
+        <% if (p.popular) { %><span class="price-tag"><%= t('pricing.most_popular') %></span><% } %>
+        <h3><%= t('pricing.' + key + '_t') %></h3>
+        <div class="price">
+          <span class="amount">€<%= p.price %></span>
+          <% if (perMo) { %><span class="per">€<%= perMo.toFixed(2) %><%= t('pricing.per_month') %></span><% } %>
+        </div>
+        <ul class="price-feats">
+          <% (Array.isArray(feats)?feats:[]).forEach(function(ft){ %><li><%= ft %></li><% }); %>
+        </ul>
+        <a href="/buy?plan=<%= key %>" class="btn <%= p.popular ? 'btn-primary' : 'btn-ghost' %> btn-block"><%= t('pricing.buy_btn') %></a>
+      </div>
+    <% }); %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
