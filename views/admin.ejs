@@ -33,22 +33,24 @@
     <h3 class="panel-h">Пользователи (<%= users.length %> последних)</h3>
     <div class="tbl-wrap">
       <table class="admin-tbl">
-        <thead><tr><th>Username</th><th>Email</th><th>Регистрация</th><th>Роль</th><th>Выдать тариф</th></tr></thead>
+        <thead><tr><th>Username</th><th>Email</th><th>Подписка</th><th>Роль</th><th>Выдать дней (404 = ∞)</th></tr></thead>
         <tbody>
           <% users.forEach(function(u){ %>
+            <%
+              var subTxt = '—';
+              if (isAdminFn(u)) subTxt = '∞';
+              else if (u.subForever) subTxt = '∞';
+              else if (u.subUntil) { var dl = Math.max(0, Math.ceil((new Date(u.subUntil)-new Date())/86400000)); subTxt = dl + ' дн.'; }
+            %>
             <tr>
               <td><%= u.username %></td>
               <td class="muted"><%= u.email %></td>
-              <td class="muted small"><%= new Date(u.createdAt).toLocaleString() %></td>
+              <td><%= subTxt %></td>
               <td><% if (isAdminFn(u)) { %><span class="admin-badge">ADMIN</span><% } else { %><span class="muted small">user</span><% } %></td>
               <td>
                 <form action="/admin/grant" method="post" class="grant-form">
                   <input type="hidden" name="userId" value="<%= u.id %>">
-                  <select name="plan">
-                    <option value="lifetime">Навсегда</option>
-                    <option value="season">Сезон</option>
-                    <option value="month">Месяц</option>
-                  </select>
+                  <input type="number" name="days" min="1" value="30" class="grant-days" title="дней (404 = навсегда)">
                   <button type="submit" class="btn-mini">Выдать</button>
                 </form>
               </td>

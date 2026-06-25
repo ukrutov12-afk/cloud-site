@@ -40,13 +40,28 @@ async function initPg() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
+  // новые поля (для уже существующих таблиц)
+  await pg.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS uid       INTEGER;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS hwid      TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_plan  TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_until TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_forever BOOLEAN DEFAULT false;
+  `);
 }
 function rowUser(r) {
-  return r && {
+  if (!r) return null;
+  return {
     id: r.id, username: r.username, email: r.email, passwordHash: r.password_hash,
-    plan: r.plan, createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at
+    plan: r.plan, uid: r.uid, hwid: r.hwid,
+    subPlan: r.sub_plan,
+    subUntil: r.sub_until instanceof Date ? r.sub_until.toISOString() : r.sub_until,
+    subForever: !!r.sub_forever,
+    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at
   };
 }
+const USER_COLS = { plan: 'plan', hwid: 'hwid', uid: 'uid', passwordHash: 'password_hash',
+  subPlan: 'sub_plan', subUntil: 'sub_until', subForever: 'sub_forever' };
 function rowOrder(r) {
   return r && {
     id: r.id, userId: r.user_id, plan: r.plan, price: Number(r.price), currency: r.currency,
@@ -69,15 +84,18 @@ const pgApi = {
   },
   async createUser({ username, email, passwordHash }) {
     const id = newId('u');
+    const uid = 10000 + Math.floor(Math.random() * 89999);
     const { rows } = await pg.query(
-      'INSERT INTO users (id, username, email, password_hash) VALUES ($1,$2,$3,$4) RETURNING *',
-      [id, username.trim(), email.toLowerCase().trim(), passwordHash]
+      'INSERT INTO users (id, username, email, password_hash, uid) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+      [id, username.trim(), email.toLowerCase().trim(), passwordHash, uid]
     );
     return rowUser(rows[0]);
   },
   async updateUser(id, patch) {
     const sets = [], vals = []; let i = 1;
-    if (patch.plan !== undefined) { sets.push(`plan=$${i++}`); vals.push(patch.plan); }
+    for (const k in patch) {
+      if (USER_COLS[k]) { sets.push(`${USER_COLS[k]}=$${i++}`); vals.push(patch[k]); }
+    }
     if (!sets.length) return this.findById(id);
     vals.push(id);
     const { rows } = await pg.query(`UPDATE users SET ${sets.join(',')} WHERE id=$${i} RETURNING *`, vals);
@@ -134,7 +152,9 @@ const fileApi = {
     const users = readJSON(USERS_FILE);
     const user = {
       id: newId('u'), username: username.trim(), email: email.toLowerCase().trim(),
-      passwordHash, plan: null, createdAt: new Date().toISOString()
+      passwordHash, plan: null, uid: 10000 + Math.floor(Math.random() * 89999),
+      hwid: null, subPlan: null, subUntil: null, subForever: false,
+      createdAt: new Date().toISOString()
     };
     users.push(user); writeJSON(USERS_FILE, users);
     return user;

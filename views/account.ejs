@@ -1,60 +1,93 @@
 <%- include('partials/header', { pageTitle: 'Cloud — ' + t('account.title') }) %>
+<%
+  var locMap = { ru: 'ru-RU', uk: 'uk-UA', be: 'be-BY', en: 'en-GB' };
+  var loc = locMap[lang] || 'ru-RU';
+  function fdate(s){ try { return new Date(s).toLocaleString(loc, {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); } catch(e){ return s; } }
+  // UID: из БД или стабильно выводим из id
+  var uid = account.uid;
+  if (!uid) { uid = 0; for (var i=0;i<account.id.length;i++) uid=(uid*31+account.id.charCodeAt(i))%90000; uid+=10000; }
+  var role = admin ? t('account.role_admin') : t('account.role_user');
+%>
 
-<section class="section narrow">
-  <h2 class="section-title"><%= t('account.title') %></h2>
+<section class="section narrow profile">
+  <h1 class="prof-title"><%= t('account.title') %></h1>
+  <p class="prof-sub muted"><%= t('account.subtitle') %></p>
 
-  <div class="account-grid">
-    <div class="panel">
-      <div class="acc-head">
-        <div class="acc-avatar"><%= (account.username||'C').charAt(0).toUpperCase() %></div>
-        <div>
-          <div class="acc-hi"><%= t('account.welcome') %>, <strong><%= account.username %></strong></div>
-          <div class="muted small"><%= account.email %></div>
-        </div>
-      </div>
-      <div class="acc-plan">
-        <span class="muted"><%= t('account.your_plan') %></span>
-        <strong>
-          <%
-            var planLabel = t('account.no_plan');
-            if (effectivePlan) {
-              if (String(effectivePlan).indexOf('trial_') === 0) {
-                planLabel = t('buy.trial_title') + ' (' + effectivePlan.replace('trial_','').replace('d','') + ' ' + t('buy.trial_days') + ')';
-              } else {
-                planLabel = t('pricing.' + effectivePlan + '_t');
-              }
-            }
-          %>
-          <%= planLabel %>
-          <% if (admin) { %><span class="admin-badge">ADMIN ∞</span><% } %>
-        </strong>
-      </div>
-      <% if (effectivePlan) { %>
-        <a href="#" class="btn btn-primary btn-block"><%= t('account.download') %></a>
-      <% } else { %>
-        <a href="/buy" class="btn btn-primary btn-block"><%= t('nav.buy') %></a>
-      <% } %>
-      <% if (admin) { %><a href="/admin" class="btn btn-ghost btn-block" style="margin-top:10px">⚙ Admin Panel</a><% } %>
-    </div>
-
-    <div class="panel">
-      <h3 class="panel-h"><%= t('account.orders') %></h3>
-      <% if (!orders.length) { %>
-        <p class="muted"><%= t('account.no_orders') %></p>
-      <% } else { %>
-        <table class="orders">
-          <% orders.forEach(function(o){ %>
-            <tr>
-              <td><%= t('pricing.' + o.plan + '_t') %></td>
-              <td><%= o.price %> ₽</td>
-              <td><span class="status status-<%= o.status %>"><%= o.status==='paid' ? t('account.status_paid') : t('account.status_pending') %></span></td>
-              <td class="muted small"><%= new Date(o.createdAt).toLocaleDateString() %></td>
-            </tr>
-          <% }); %>
-        </table>
-      <% } %>
+  <!-- юзер -->
+  <div class="prof-user">
+    <div class="acc-avatar"><%= (account.username||'C').charAt(0).toUpperCase() %></div>
+    <div>
+      <div class="pu-name"><%= account.username %></div>
+      <div class="muted small"><%= account.email %></div>
     </div>
   </div>
+
+  <hr class="prof-hr">
+
+  <!-- подписка -->
+  <div class="prof-section-label crown"><%= t('account.subscription') %></div>
+  <div class="sub-row">
+    <% if (sub) { %>
+      <div>
+        <div class="sub-name">Cloud<% if (!sub.forever) { %> (<%= sub.daysLeft %> <%= t('account.days_short') %>)<% } %></div>
+        <div class="muted small">
+          <% if (sub.forever) { %><%= t('account.forever') %><% } else { %><%= t('account.until') %> <%= fdate(sub.until) %><% } %>
+        </div>
+      </div>
+      <div class="sub-right">
+        <span class="sub-status <%= sub.active ? 'on' : 'off' %>"><%= sub.active ? t('account.status_active') : t('account.status_expired') %></span>
+        <a href="/buy" class="btn btn-primary sub-renew"><%= t('account.renew') %></a>
+      </div>
+    <% } else { %>
+      <div><div class="sub-name muted"><%= t('account.no_sub') %></div></div>
+      <div class="sub-right"><a href="/buy" class="btn btn-primary sub-renew"><%= t('nav.buy') %></a></div>
+    <% } %>
+  </div>
+
+  <hr class="prof-hr">
+
+  <!-- данные аккаунта -->
+  <div class="prof-section-label gear"><%= t('account.data') %></div>
+  <div class="data-list">
+    <div class="data-row"><span class="dr-k">#&nbsp; <%= t('account.uid') %></span><span class="dr-v"><%= uid %></span></div>
+    <div class="data-row"><span class="dr-k">⛉&nbsp; <%= t('account.role') %></span><span class="dr-v"><%= role %><% if (admin) { %> <span class="admin-badge">ADMIN</span><% } %></span></div>
+    <div class="data-row"><span class="dr-k">☻&nbsp; <%= t('account.login') %></span><span class="dr-v"><%= account.username %></span></div>
+    <div class="data-row"><span class="dr-k">✉&nbsp; <%= t('account.email') %></span><span class="dr-v"><%= account.email %></span></div>
+    <div class="data-row"><span class="dr-k">🗓&nbsp; <%= t('account.registered') %></span><span class="dr-v"><%= fdate(account.createdAt) %></span></div>
+    <div class="data-row"><span class="dr-k">🖥&nbsp; <%= t('account.hwid') %></span><span class="dr-v mono"><%= account.hwid || ('— ' + t('account.hwid_none')) %></span></div>
+  </div>
+
+  <hr class="prof-hr">
+
+  <!-- действия -->
+  <div class="prof-actions">
+    <a href="#" class="btn btn-ghost act-btn"><%= t('account.btn_download') %></a>
+    <form action="/account/soon" method="post"><button class="btn btn-ghost act-btn"><%= t('account.btn_key') %></button></form>
+    <button type="button" class="btn btn-ghost act-btn" id="passToggle"><%= t('account.btn_pass') %></button>
+    <form action="/account/hwid/reset" method="post"><button class="btn btn-ghost act-btn"><%= t('account.btn_hwid') %></button></form>
+    <form action="/account/soon" method="post"><button class="btn btn-ghost act-btn"><%= t('account.btn_freeze') %></button></form>
+    <form action="/account/soon" method="post"><button class="btn btn-ghost act-btn"><%= t('account.btn_2fa') %></button></form>
+  </div>
+
+  <!-- смена пароля (скрытая форма) -->
+  <div class="panel pass-panel" id="passPanel" style="display:none">
+    <h3 class="panel-h"><%= t('account.pass_title') %></h3>
+    <form action="/account/password" method="post" class="form">
+      <label class="field"><span><%= t('account.cur_pass') %></span><input type="password" name="current" required></label>
+      <label class="field"><span><%= t('account.new_pass') %></span><input type="password" name="password" minlength="6" required></label>
+      <label class="field"><span><%= t('account.new_pass2') %></span><input type="password" name="password2" minlength="6" required></label>
+      <div class="row-gap">
+        <button type="submit" class="btn btn-primary"><%= t('account.save') %></button>
+        <button type="button" class="btn btn-ghost" id="passCancel"><%= t('account.cancel') %></button>
+      </div>
+    </form>
+  </div>
 </section>
+
+<script>
+  var pt = document.getElementById('passToggle'), pp = document.getElementById('passPanel'), pc = document.getElementById('passCancel');
+  if (pt) pt.addEventListener('click', function(){ pp.style.display = pp.style.display==='none'?'block':'none'; pp.scrollIntoView({behavior:'smooth',block:'center'}); });
+  if (pc) pc.addEventListener('click', function(){ pp.style.display='none'; });
+</script>
 
 <%- include('partials/footer') %>

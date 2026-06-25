@@ -49,6 +49,29 @@ function trialPrice(days) {
   return TRIAL_PRICES[days];
 }
 
+// сколько дней даёт тариф (null = бессрочно)
+function planDays(planId) {
+  if (planId === 'month') return 30;
+  if (planId === 'season') return 90;
+  if (planId === 'lifetime' || planId === 'lifetime_beta') return null;
+  const m = /^trial_(\d+)d$/.exec(String(planId)); if (m) return parseInt(m[1], 10);
+  return null;
+}
+
+// применить подписку пользователю: days=число (продлевает) или null (навсегда)
+async function applySub(userId, planLabel, days) {
+  const user = await db.findById(userId);
+  if (!user) return;
+  if (days === null) {
+    await db.updateUser(userId, { plan: planLabel, subPlan: planLabel, subForever: true, subUntil: null });
+  } else {
+    const now = new Date();
+    const base = (user.subUntil && !user.subForever && new Date(user.subUntil) > now) ? new Date(user.subUntil) : now;
+    const until = new Date(base.getTime() + days * 86400000);
+    await db.updateUser(userId, { plan: planLabel, subPlan: planLabel, subForever: false, subUntil: until.toISOString() });
+  }
+}
+
 // ─────────────────────────── Админы ───────────────────────────
 // ADMIN_EMAILS = список email через запятую (в окружении Render). Админ
 // определяется ТОЛЬКО по почте — ник не важен. (ADMIN_USERS поддержан как
@@ -161,6 +184,7 @@ app.post('/buy', requireAuth, async (req, res, next) => {
       plan = PLANS.lifetime_beta;
     }
     await db.createOrder({ userId: req.session.userId, plan: plan.id, price: plan.price, currency: plan.currency });
+    await applySub(req.session.userId, plan.id, planDays(plan.id));
     flash(req, 'success', 'buy.order_created');
     res.redirect('/account');
   } catch (e) { next(e); }
@@ -176,6 +200,7 @@ app.post('/buy/trial', requireAuth, async (req, res, next) => {
     }
     const days = Math.max(1, Math.min(7, parseInt(req.body.days, 10) || 1));
     await db.createOrder({ userId: req.session.userId, plan: 'trial_' + days + 'd', price: trialPrice(days), currency: 'RUB' });
+    await applySub(req.session.userId, 'trial_' + days + 'd', days);
     flash(req, 'success', 'buy.order_created');
     res.redirect('/account');
   } catch (e) { next(e); }
@@ -251,16 +276,56 @@ app.post('/logout', (req, res) => {
   res.redirect('/');
 });
 
+function subView(user, admin) {
+  if (admin) return { active: true, forever: true, plan: 'lifetime' };
+  if (user.subForever) return { active: true, forever: true, plan: user.subPlan || 'lifetime' };
+  if (user.subUntil) {
+    const until = new Date(user.subUntil), now = new Date();
+    return {
+      active: until > now, forever: false, plan: user.subPlan,
+      until: user.subUntil, daysLeft: Math.max(0, Math.ceil((until - now) / 86400000))
+    };
+  }
+  return null;
+}
+
 app.get('/account', requireAuth, async (req, res, next) => {
   try {
     const user = await db.findById(req.session.userId);
     if (!user) { req.session.userId = null; return res.redirect('/login'); }
     const orders = await db.getOrdersByUser(user.id);
-    // админ = вечный тариф автоматически
-    const effectivePlan = isAdmin(user) ? 'lifetime'
-      : (orders[0] ? orders[0].plan : null);
-    res.render('account', { page: 'account', account: user, orders, effectivePlan, admin: isAdmin(user) });
+    const admin = isAdmin(user);
+    res.render('account', { page: 'account', account: user, orders, admin, sub: subView(user, admin) });
   } catch (e) { next(e); }
+});
+
+// смена пароля
+app.post('/account/password', requireAuth, async (req, res, next) => {
+  try {
+    const user = await db.findById(req.session.userId);
+    const { current, password, password2 } = req.body;
+    if (!current || !password || !bcrypt.compareSync(current, user.passwordHash)) { flash(req, 'error', 'flash.err_creds'); return res.redirect('/account'); }
+    if (password.length < 6) { flash(req, 'error', 'flash.err_pass_short'); return res.redirect('/account'); }
+    if (password !== password2) { flash(req, 'error', 'flash.err_pass_match'); return res.redirect('/account'); }
+    await db.updateUser(user.id, { passwordHash: bcrypt.hashSync(password, 10) });
+    flash(req, 'success', 'account.pass_changed');
+    res.redirect('/account');
+  } catch (e) { next(e); }
+});
+
+// сброс HWID
+app.post('/account/hwid/reset', requireAuth, async (req, res, next) => {
+  try {
+    await db.updateUser(req.session.userId, { hwid: null });
+    flash(req, 'success', 'account.hwid_reset');
+    res.redirect('/account');
+  } catch (e) { next(e); }
+});
+
+// заглушки (функции в разработке)
+app.post('/account/soon', requireAuth, (req, res) => {
+  flash(req, 'error', 'account.soon');
+  res.redirect('/account');
 });
 
 // ───────────────────────── Админ-панель ─────────────────────────
@@ -295,13 +360,17 @@ app.get('/admin', requireAdmin, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// выдать тариф пользователю (создаёт оплаченный заказ)
+// выдать подписку по дням (404 = навсегда)
 app.post('/admin/grant', requireAdmin, async (req, res, next) => {
   try {
-    const { userId, plan } = req.body;
-    const p = PLANS[plan] || PLANS.lifetime;
-    const order = await db.createOrder({ userId, plan: p.id, price: p.price, currency: p.currency });
+    const { userId } = req.body;
+    const rawDays = parseInt(req.body.days, 10);
+    const forever = rawDays === 404 || req.body.days === 'forever';
+    const days = forever ? null : Math.max(1, rawDays || 30);
+    const label = forever ? 'lifetime' : ('grant_' + days + 'd');
+    const order = await db.createOrder({ userId, plan: label, price: 0, currency: 'RUB' });
     await db.setOrderStatus(order.id, 'paid');
+    await applySub(userId, label, days);
     res.redirect('/admin');
   } catch (e) { next(e); }
 });

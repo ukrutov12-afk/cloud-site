@@ -257,6 +257,40 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 .status-pending{background:rgba(255,196,84,.14);color:#ffd591;border:1px solid rgba(255,196,84,.3)}
 .status-paid{background:rgba(54,211,153,.14);color:#9af0cd;border:1px solid rgba(54,211,153,.3)}
 
+/* ===== profile (account) ===== */
+.profile{max-width:860px}
+.prof-title{font-size:40px;font-weight:800;letter-spacing:-1px}
+.prof-sub{margin-bottom:30px}
+.prof-user{display:flex;align-items:center;gap:16px}
+.pu-name{font-size:19px;font-weight:700}
+.prof-hr{border:none;border-top:1px solid var(--stroke);margin:24px 0}
+.prof-section-label{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;
+  letter-spacing:.7px;text-transform:uppercase;color:#9a8cff;margin-bottom:16px}
+.prof-section-label.crown::before{content:"♛"}
+.prof-section-label.gear::before{content:"⚙"}
+.sub-row{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+.sub-name{font-size:21px;font-weight:800;margin-bottom:4px}
+.sub-right{display:flex;align-items:center;gap:16px}
+.sub-status{font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px}
+.sub-status::before{content:"";width:8px;height:8px;border-radius:50%}
+.sub-status.on{color:#5fe3a9} .sub-status.on::before{background:#36d399;box-shadow:0 0 8px #36d399}
+.sub-status.off{color:#ff9a9a} .sub-status.off::before{background:#ff6a6a}
+.sub-renew{padding:9px 18px}
+.data-list{display:flex;flex-direction:column}
+.data-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.data-row:last-child{border-bottom:none}
+.dr-k{color:var(--muted);font-size:14.5px}
+.dr-v{font-weight:600;font-size:14.5px;text-align:right}
+.dr-v.mono{font-family:ui-monospace,Consolas,monospace;font-size:13px;color:var(--muted)}
+.prof-actions{display:flex;flex-wrap:wrap;gap:11px}
+.prof-actions form{display:inline}
+.act-btn{font-size:13.5px;padding:11px 16px}
+.pass-panel{margin-top:20px;max-width:440px}
+
+/* выдача дней в админке */
+.grant-days{font:inherit;font-size:13px;color:var(--text);background:rgba(255,255,255,.05);
+  border:1px solid var(--stroke);border-radius:8px;padding:5px 8px;width:78px}
+
 /* ===== support ===== */
 .support-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:start}
 .faq{border:1px solid var(--stroke);border-radius:12px;padding:4px 16px;margin-bottom:10px;background:rgba(255,255,255,.025)}
