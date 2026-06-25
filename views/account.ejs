@@ -48,13 +48,23 @@
 
   <!-- данные аккаунта -->
   <div class="prof-section-label gear"><%= t('account.data') %></div>
+  <%
+    var ico = {
+      uid:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 9h16M4 15h16M10 4 8 20M16 4l-2 16"/></svg>',
+      role: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/></svg>',
+      login:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
+      mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/></svg>',
+      cal:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>',
+      hwid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>'
+    };
+  %>
   <div class="data-list">
-    <div class="data-row"><span class="dr-k">#&nbsp; <%= t('account.uid') %></span><span class="dr-v"><%= uid %></span></div>
-    <div class="data-row"><span class="dr-k">⛉&nbsp; <%= t('account.role') %></span><span class="dr-v"><%= role %><% if (admin) { %> <span class="admin-badge">ADMIN</span><% } %></span></div>
-    <div class="data-row"><span class="dr-k">☻&nbsp; <%= t('account.login') %></span><span class="dr-v"><%= account.username %></span></div>
-    <div class="data-row"><span class="dr-k">✉&nbsp; <%= t('account.email') %></span><span class="dr-v"><%= account.email %></span></div>
-    <div class="data-row"><span class="dr-k">🗓&nbsp; <%= t('account.registered') %></span><span class="dr-v"><%= fdate(account.createdAt) %></span></div>
-    <div class="data-row"><span class="dr-k">🖥&nbsp; <%= t('account.hwid') %></span><span class="dr-v mono"><%= account.hwid || ('— ' + t('account.hwid_none')) %></span></div>
+    <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.uid %></i><%= t('account.uid') %></span><span class="dr-v"><%= uid %></span></div>
+    <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.role %></i><%= t('account.role') %></span><span class="dr-v"><%= role %><% if (admin) { %> <span class="admin-badge">ADMIN</span><% } %></span></div>
+    <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.login %></i><%= t('account.login') %></span><span class="dr-v"><%= account.username %></span></div>
+    <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.mail %></i><%= t('account.email') %></span><span class="dr-v"><%= account.email %></span></div>
+    <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.cal %></i><%= t('account.registered') %></span><span class="dr-v"><%= fdate(account.createdAt) %></span></div>
+    <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.hwid %></i><%= t('account.hwid') %></span><span class="dr-v mono"><%= account.hwid || ('— ' + t('account.hwid_none')) %></span></div>
   </div>
 
   <hr class="prof-hr">
