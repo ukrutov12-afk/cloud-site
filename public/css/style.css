@@ -186,6 +186,20 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 .grow .sw.on::after{left:18px}
 
 /* ===== features ===== */
+.features{position:relative}
+/* плавающие скрины софта ПО БОКАМ (в полях, выглядывают с краёв), не за карточками */
+.side-shot{position:absolute;top:50%;width:330px;height:205px;border-radius:14px;
+  background-size:cover;background-position:center;opacity:.6;z-index:0;pointer-events:none;
+  border:1px solid var(--stroke-strong);box-shadow:0 20px 50px rgba(0,0,0,.5)}
+/* правый край всегда на ~10px левее контента (left+width = 12) — без наложения */
+.side-shot.left{left:-318px;transform:translateY(-50%) rotate(-7deg);
+  -webkit-mask-image:linear-gradient(to right, transparent, #000 72%);
+  mask-image:linear-gradient(to right, transparent, #000 72%)}
+.side-shot.right{right:-318px;transform:translateY(-50%) rotate(7deg);
+  -webkit-mask-image:linear-gradient(to left, transparent, #000 72%);
+  mask-image:linear-gradient(to left, transparent, #000 72%)}
+@media (max-width:1180px){.side-shot{display:none}}
+
 .feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
 .feature-card{background:rgba(15,20,32,.20);border:1px solid var(--stroke);border-radius:var(--radius);padding:24px;
   backdrop-filter:blur(5px) saturate(115%);-webkit-backdrop-filter:blur(5px) saturate(115%);transition:.2s}
