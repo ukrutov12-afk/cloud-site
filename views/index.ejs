@@ -1,5 +1,7 @@
 <%- include('partials/header', { pageTitle: 'Cloud Client — ' + t('nav.home') }) %>
 
+<div class="hero-bg"></div>
+
 <section class="hero">
   <div class="hero-content">
     <span class="badge"><%= t('hero.badge') %></span>
@@ -32,7 +34,7 @@
   </div>
 </section>
 
-<section class="features section">
+<section class="features section has-shot" style="--shot:url('/img/sec1.jpg')">
   <h2 class="section-title"><%= t('features.title') %></h2>
   <div class="feature-grid">
     <%
@@ -53,7 +55,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section has-shot" style="--shot:url('/img/sec2.jpg')">
   <div class="cta-band">
     <div>
       <h2><%= t('hero.cta_buy') %></h2>

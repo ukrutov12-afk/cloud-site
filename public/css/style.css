@@ -108,7 +108,35 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 .flash-error{background:rgba(255,90,90,.12);border-color:rgba(255,90,90,.4);color:#ffc9c9}
 
 /* ===== layout ===== */
-.main{min-height:60vh}
+.main{min-height:60vh;position:relative}
+
+/* фон ГЕРОЯ (верх главной) — закат-шейдеры, еле видно, плавно тает вниз */
+.hero-bg{position:absolute;top:0;left:0;right:0;height:820px;z-index:-1;pointer-events:none;
+  background:url('/img/hero.jpg') center top/cover no-repeat;opacity:.22;
+  -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,.85) 28%, rgba(0,0,0,.4) 55%, transparent 78%);
+  mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,.85) 28%, rgba(0,0,0,.4) 55%, transparent 78%);
+  animation:bgIn 1.4s ease both}
+@keyframes bgIn{from{opacity:0;transform:scale(1.06)}to{opacity:.22;transform:none}}
+
+/* фоновый скрин клиента в секции (еле видно, тает сверху и снизу) */
+.has-shot{position:relative}
+.has-shot::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background-image:var(--shot);background-size:cover;background-position:center;opacity:.06;
+  -webkit-mask-image:linear-gradient(to bottom, transparent, rgba(0,0,0,1) 30%, rgba(0,0,0,1) 70%, transparent);
+  mask-image:linear-gradient(to bottom, transparent, rgba(0,0,0,1) 30%, rgba(0,0,0,1) 70%, transparent)}
+
+/* появление контента героя */
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.hero .badge{animation:fadeUp .7s .05s both}
+.hero-title{animation:fadeUp .8s .12s both}
+.hero-sub{animation:fadeUp .8s .20s both}
+.hero-cta{animation:fadeUp .8s .28s both}
+.hero-stats{animation:fadeUp .8s .36s both}
+
+/* reveal-on-scroll (вешается из JS) */
+.anim-init{opacity:0;transform:translateY(24px)}
+.anim-in{opacity:1 !important;transform:none !important;
+  transition:opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1)}
 .section{max-width:var(--maxw);margin:0 auto;padding:74px 22px}
 .section.narrow{max-width:920px}
 .section.center{text-align:center}
