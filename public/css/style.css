@@ -199,7 +199,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 /* большие ФОНОВЫЕ скрины — прижаты к ЛЕВОМУ и ПРАВОМУ краю экрана (не пересекаются),
    полное качество (png), мягкое размытие + затухание к краям */
 .side-shot{position:absolute;top:60%;width:38vw;height:560px;
-  background-size:cover;background-position:center;opacity:.24;z-index:-1;pointer-events:none;
+  background-size:cover;background-position:center;opacity:.4;z-index:-1;pointer-events:none;
   transform:translateY(-50%);filter:blur(0.5px)}
 /* левый край экрана: left = -(отступ центрирования секции). Края сильно тают. */
 .side-shot.left{left:calc((1160px - 100vw) / 2);

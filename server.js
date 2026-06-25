@@ -18,6 +18,7 @@ const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 const SITE_URL = process.env.SITE_URL || 'http://cloudlegit.work.gd';
 const IS_PROD = process.env.NODE_ENV === 'production';
+const BUILD = new Date().toISOString().slice(0, 16).replace('T', ' '); // метка сборки (момент старта)
 app.set('trust proxy', 1); // за nginx/Caddy — корректные secure-cookie и протокол
 
 // ─────────────────────────── i18n ───────────────────────────
@@ -129,6 +130,7 @@ app.use(async (req, res, next) => {
       ? req.session.lang : DEFAULT_LANG;
 
     res.locals.lang = lang;
+    res.locals.build = BUILD;
     res.locals.siteUrl = SITE_URL;
     res.locals.langs = LANGS.map(code => ({ code, name: locales[code].lang_name }));
     res.locals.t = (k) => t(lang, k);
