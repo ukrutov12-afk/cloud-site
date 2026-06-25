@@ -52,17 +52,10 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 
 /* ===== Навигация — Liquid Glass (на всю ширину, без скруглений) ===== */
 .nav{position:sticky;top:0;z-index:50;
-  backdrop-filter:blur(20px) saturate(170%);-webkit-backdrop-filter:blur(20px) saturate(170%);
-  background:linear-gradient(180deg, rgba(16,21,34,.35), rgba(12,16,26,.18));
+  backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);
+  background:linear-gradient(180deg, rgba(14,19,30,.40), rgba(10,14,24,.26));
   border-bottom:1px solid var(--stroke-strong);
   box-shadow:0 8px 32px rgba(0,0,0,.35);overflow:hidden}
-/* фон шапки — закат-шейдеры, СИЛЬНО размыты (frosted glass) */
-.nav-bg{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-.nav-bg::before{content:"";position:absolute;inset:-60px;
-  background:url('/img/hero.jpg') center 38%/cover no-repeat;
-  filter:blur(44px) saturate(160%) brightness(.72);opacity:.6}
-.nav-bg::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg, rgba(8,11,20,.38), rgba(8,11,20,.58))}
 /* верхний световой блик стекла */
 .nav::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;z-index:3;
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent)}
@@ -114,20 +107,25 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 /* ===== layout ===== */
 .main{min-height:60vh;position:relative}
 
-/* фон ГЕРОЯ (верх главной) — закат-шейдеры, еле видно, плавно тает вниз */
-.hero-bg{position:absolute;top:0;left:0;right:0;height:820px;z-index:-1;pointer-events:none;
+/* фон ГЕРОЯ (верх главной) — закат-шейдеры, еле видно, тает вниз.
+   Сдвинут ВВЕРХ (top отрицательный) и компенсирован высотой, чтобы заходить
+   под шапку — тогда стеклянная шапка размывает его (отражает картинку). */
+.hero-bg{position:absolute;top:-130px;left:0;right:0;height:950px;z-index:-1;pointer-events:none;
   background:url('/img/hero.jpg') center top/cover no-repeat;opacity:.22;
-  -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,.85) 28%, rgba(0,0,0,.4) 55%, transparent 78%);
-  mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,.85) 28%, rgba(0,0,0,.4) 55%, transparent 78%);
+  -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,.9) 24%, rgba(0,0,0,.45) 50%, transparent 80%);
+  mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,.9) 24%, rgba(0,0,0,.45) 50%, transparent 80%);
   animation:bgIn 1.4s ease both}
 @keyframes bgIn{from{opacity:0;transform:scale(1.06)}to{opacity:.22;transform:none}}
 
 /* фоновый скрин клиента в секции (еле видно, тает сверху и снизу) */
 .has-shot{position:relative}
 .has-shot::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  background-image:var(--shot);background-size:cover;background-position:center;opacity:.13;
-  -webkit-mask-image:linear-gradient(to bottom, transparent, rgba(0,0,0,1) 28%, rgba(0,0,0,1) 72%, transparent);
-  mask-image:linear-gradient(to bottom, transparent, rgba(0,0,0,1) 28%, rgba(0,0,0,1) 72%, transparent)}
+  background-image:var(--shot);background-size:cover;background-position:center;opacity:.2;
+  filter:blur(2px);
+  -webkit-mask-image:linear-gradient(to bottom, transparent, #000 24%, #000 76%, transparent), linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+  -webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to bottom, transparent, #000 24%, #000 76%, transparent), linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+  mask-composite:intersect}
 
 /* появление контента героя */
 @keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
@@ -190,18 +188,19 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 
 /* ===== features ===== */
 .feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-.feature-card{background:rgba(15,20,32,.34);border:1px solid var(--stroke);border-radius:var(--radius);padding:24px;
-  backdrop-filter:blur(10px) saturate(120%);-webkit-backdrop-filter:blur(10px) saturate(120%);transition:.2s}
-.feature-card:hover{transform:translateY(-4px);border-color:var(--stroke-strong);background:rgba(20,26,40,.46)}
+.feature-card{background:rgba(15,20,32,.20);border:1px solid var(--stroke);border-radius:var(--radius);padding:24px;
+  backdrop-filter:blur(5px) saturate(115%);-webkit-backdrop-filter:blur(5px) saturate(115%);transition:.2s}
+.feature-card:hover{transform:translateY(-4px);border-color:var(--stroke-strong);background:rgba(20,26,40,.34)}
 .feature-ico{width:46px;height:46px;display:grid;place-items:center;border-radius:13px;
   background:var(--accent-soft);border:1px solid rgba(59,155,255,.25);margin-bottom:14px;color:#9ecbff}
 .feature-ico svg{width:24px;height:24px}
 
 /* баннер призыва внизу главной (вместо блока цен) */
 .cta-band{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;
-  background:linear-gradient(135deg, rgba(59,155,255,.14), rgba(124,92,255,.12));
+  background:linear-gradient(135deg, rgba(59,155,255,.10), rgba(124,92,255,.09));
   border:1px solid var(--stroke-strong);border-radius:var(--radius);padding:34px 36px;
-  backdrop-filter:blur(16px);box-shadow:var(--shadow)}
+  backdrop-filter:blur(6px) saturate(125%);-webkit-backdrop-filter:blur(6px) saturate(125%);
+  box-shadow:var(--shadow)}
 .cta-band h2{font-size:26px;font-weight:800;margin-bottom:6px}
 .feature-card h3{font-size:16.5px;margin-bottom:8px}
 .feature-card p{color:var(--muted);font-size:14px}
