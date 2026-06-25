@@ -12,11 +12,12 @@
   },
   "hero": {
     "badge": "Minecraft 1.21.4 • Fabric",
-    "title": "Cloud — a client that feels the game",
+    "title": "Cloud — a client that reads the game",
     "subtitle": "Smooth Liquid Glass interface, clean bypasses, thoughtful modules. Built for people who care about quality.",
     "cta_buy": "Buy the client",
     "cta_docs": "Documentation",
-    "stat_users": "active players",
+    "stat_bypass": "Bypass",
+    "stat_users": "many servers",
     "stat_uptime": "uptime",
     "stat_modules": "modules"
   },

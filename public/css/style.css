@@ -40,29 +40,33 @@ body::before{content:"";position:fixed;inset:0;z-index:-3;
 body::after{content:"";position:fixed;inset:0;z-index:-3;
   background:linear-gradient(180deg, rgba(7,10,18,.86), rgba(7,10,18,.92));}
 
-/* фоновые орбы (мягкое свечение) — поверх картинки, это «дизайн-засветы» */
-.bg-orbs{position:fixed;inset:0;z-index:-2;overflow:hidden;background:
-  radial-gradient(1200px 700px at 80% -10%, rgba(59,155,255,.12), transparent 60%),
-  radial-gradient(900px 600px at 0% 10%, rgba(124,92,255,.10), transparent 60%);}
-.bg-orbs span{position:absolute;border-radius:50%;filter:blur(80px);opacity:.5;animation:float 18s ease-in-out infinite}
-.bg-orbs span:nth-child(1){width:420px;height:420px;background:rgba(59,155,255,.30);top:-80px;right:8%}
-.bg-orbs span:nth-child(2){width:360px;height:360px;background:rgba(124,92,255,.26);top:40%;left:-100px;animation-delay:-6s}
-.bg-orbs span:nth-child(3){width:300px;height:300px;background:rgba(54,211,153,.14);bottom:-60px;right:30%;animation-delay:-11s}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-40px)}}
+/* фоновые орбы-засветы — ПРИВЯЗАНЫ К СТРАНИЦЕ (не следуют за камерой при скролле),
+   стоят на своих местах, без движения */
+.bg-orbs{position:absolute;inset:0;z-index:-2;overflow:hidden;pointer-events:none;background:
+  radial-gradient(1200px 700px at 80% -2%, rgba(59,155,255,.12), transparent 60%),
+  radial-gradient(900px 600px at 0% 8%, rgba(124,92,255,.10), transparent 60%);}
+.bg-orbs span{position:absolute;border-radius:50%;filter:blur(80px);opacity:.5}
+.bg-orbs span:nth-child(1){width:420px;height:420px;background:rgba(59,155,255,.30);top:120px;right:8%}
+.bg-orbs span:nth-child(2){width:360px;height:360px;background:rgba(124,92,255,.26);top:48%;left:-100px}
+.bg-orbs span:nth-child(3){width:300px;height:300px;background:rgba(54,211,153,.14);bottom:8%;right:30%}
 
 /* ===== Навигация — Liquid Glass (на всю ширину, без скруглений) ===== */
 .nav{position:sticky;top:0;z-index:50;
-  backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
-  background:linear-gradient(180deg, rgba(16,21,34,.55), rgba(12,16,26,.30));
+  backdrop-filter:blur(20px) saturate(170%);-webkit-backdrop-filter:blur(20px) saturate(170%);
+  background:linear-gradient(180deg, rgba(16,21,34,.35), rgba(12,16,26,.18));
   border-bottom:1px solid var(--stroke-strong);
-  box-shadow:0 8px 32px rgba(0,0,0,.35);position:sticky;overflow:hidden}
-/* верхний световой блик стекла по всей ширине */
-.nav::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent)}
-/* мягкое внутреннее свечение сверху */
-.nav::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 40%)}
-.nav-inner{max-width:var(--maxw);margin:0 auto;padding:13px 22px;display:flex;align-items:center;gap:22px;position:relative;z-index:1}
+  box-shadow:0 8px 32px rgba(0,0,0,.35);overflow:hidden}
+/* фон шапки — закат-шейдеры, СИЛЬНО размыты (frosted glass) */
+.nav-bg{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.nav-bg::before{content:"";position:absolute;inset:-60px;
+  background:url('/img/hero.jpg') center 38%/cover no-repeat;
+  filter:blur(44px) saturate(160%) brightness(.72);opacity:.6}
+.nav-bg::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg, rgba(8,11,20,.38), rgba(8,11,20,.58))}
+/* верхний световой блик стекла */
+.nav::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;z-index:3;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent)}
+.nav-inner{max-width:var(--maxw);margin:0 auto;padding:13px 22px;display:flex;align-items:center;gap:22px;position:relative;z-index:2}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:.2px}
 .brand-logo{width:30px;height:30px;object-fit:contain;
   filter:drop-shadow(0 0 10px rgba(59,155,255,.5))}
@@ -121,9 +125,9 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 /* фоновый скрин клиента в секции (еле видно, тает сверху и снизу) */
 .has-shot{position:relative}
 .has-shot::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  background-image:var(--shot);background-size:cover;background-position:center;opacity:.06;
-  -webkit-mask-image:linear-gradient(to bottom, transparent, rgba(0,0,0,1) 30%, rgba(0,0,0,1) 70%, transparent);
-  mask-image:linear-gradient(to bottom, transparent, rgba(0,0,0,1) 30%, rgba(0,0,0,1) 70%, transparent)}
+  background-image:var(--shot);background-size:cover;background-position:center;opacity:.13;
+  -webkit-mask-image:linear-gradient(to bottom, transparent, rgba(0,0,0,1) 28%, rgba(0,0,0,1) 72%, transparent);
+  mask-image:linear-gradient(to bottom, transparent, rgba(0,0,0,1) 28%, rgba(0,0,0,1) 72%, transparent)}
 
 /* появление контента героя */
 @keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
@@ -163,6 +167,8 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 .hero-stats{display:flex;gap:34px}
 .hero-stats strong{display:block;font-size:26px;font-weight:800}
 .hero-stats span{color:var(--muted2);font-size:13.5px}
+.hero-stats .stat-word{font-size:22px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
 
 /* hero glass mock */
 .hero-glass{display:flex;justify-content:center}
@@ -184,9 +190,9 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 
 /* ===== features ===== */
 .feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-.feature-card{background:var(--panel);border:1px solid var(--stroke);border-radius:var(--radius);padding:24px;
-  backdrop-filter:blur(14px);transition:.2s}
-.feature-card:hover{transform:translateY(-4px);border-color:var(--stroke-strong)}
+.feature-card{background:rgba(15,20,32,.34);border:1px solid var(--stroke);border-radius:var(--radius);padding:24px;
+  backdrop-filter:blur(10px) saturate(120%);-webkit-backdrop-filter:blur(10px) saturate(120%);transition:.2s}
+.feature-card:hover{transform:translateY(-4px);border-color:var(--stroke-strong);background:rgba(20,26,40,.46)}
 .feature-ico{width:46px;height:46px;display:grid;place-items:center;border-radius:13px;
   background:var(--accent-soft);border:1px solid rgba(59,155,255,.25);margin-bottom:14px;color:#9ecbff}
 .feature-ico svg{width:24px;height:24px}
