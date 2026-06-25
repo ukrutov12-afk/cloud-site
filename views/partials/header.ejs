@@ -49,11 +49,14 @@
         </div>
 
         <% if (user) { %>
-          <% if (isAdmin) { %><a href="/admin" class="btn btn-ghost" style="border-color:rgba(124,92,255,.5)">⚙ Admin</a><% } %>
-          <a href="/account" class="btn btn-ghost"><%= t('nav.account') %></a>
+          <a href="/account" class="nav-user" title="<%= t('nav.account') %>">
+            <span class="nav-user-av"><% if (user.avatar) { %><img src="<%= user.avatar %>" alt=""><% } else { %><%= (user.username||'C').charAt(0).toUpperCase() %><% } %></span>
+            <span class="nav-user-name"><%= user.username %></span>
+          </a>
           <form action="/logout" method="post" style="display:inline">
             <button class="btn btn-ghost" type="submit"><%= t('nav.logout') %></button>
           </form>
+          <% if (isAdmin) { %><a href="/admin" class="btn btn-ghost" style="border-color:rgba(124,92,255,.5)">⚙ Admin</a><% } %>
         <% } else { %>
           <a href="/login" class="btn btn-ghost"><%= t('nav.login') %></a>
           <a href="/register" class="btn btn-primary"><%= t('nav.register') %></a>

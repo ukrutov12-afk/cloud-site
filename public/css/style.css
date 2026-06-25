@@ -69,6 +69,14 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 .nav-links a:hover{color:var(--text);background:rgba(255,255,255,.05)}
 .nav-links a.active{color:#fff;background:var(--accent-soft)}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+/* аватар + ник (серым) вместо кнопки «Кабинет» */
+.nav-user{display:flex;align-items:center;gap:9px;padding:4px 10px 4px 5px;border-radius:11px;transition:.15s}
+.nav-user:hover{background:rgba(255,255,255,.06)}
+.nav-user-av{width:30px;height:30px;border-radius:50%;overflow:hidden;flex-shrink:0;display:grid;place-items:center;
+  font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:1px solid var(--stroke-strong)}
+.nav-user-av img{width:100%;height:100%;object-fit:cover}
+.nav-user-name{color:var(--muted);font-size:14px;font-weight:600}
 
 /* выбор языка */
 .lang{position:relative;outline:none}
@@ -188,16 +196,20 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 /* ===== features ===== */
 .features{position:relative}
 /* плавающие скрины софта ПО БОКАМ (в полях, выглядывают с краёв), не за карточками */
-/* крупные ФОНОВЫЕ скрины по бокам (за контентом), сильно тают к краям */
+/* крупные ФОНОВЫЕ скрины по бокам (за контентом), БЕЗ поворота, тают к краям */
 .side-shot{position:absolute;top:50%;width:620px;height:380px;border-radius:18px;
-  background-size:cover;background-position:center;opacity:.3;z-index:-1;pointer-events:none;
-  filter:blur(1.5px)}
-.side-shot.left{left:-300px;transform:translateY(-50%) rotate(-6deg);
-  -webkit-mask-image:linear-gradient(115deg, #000 8%, rgba(0,0,0,.5) 42%, transparent 72%);
-  mask-image:linear-gradient(115deg, #000 8%, rgba(0,0,0,.5) 42%, transparent 72%)}
-.side-shot.right{right:-300px;transform:translateY(-50%) rotate(6deg);
-  -webkit-mask-image:linear-gradient(245deg, #000 8%, rgba(0,0,0,.5) 42%, transparent 72%);
-  mask-image:linear-gradient(245deg, #000 8%, rgba(0,0,0,.5) 42%, transparent 72%)}
+  background-size:cover;background-position:center;opacity:.28;z-index:-1;pointer-events:none;
+  transform:translateY(-50%)}
+.side-shot.left{left:-300px;
+  -webkit-mask-image:linear-gradient(to right, transparent 4%, #000 55%), linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+  -webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to right, transparent 4%, #000 55%), linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+  mask-composite:intersect}
+.side-shot.right{right:-300px;
+  -webkit-mask-image:linear-gradient(to left, transparent 4%, #000 55%), linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+  -webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to left, transparent 4%, #000 55%), linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+  mask-composite:intersect}
 @media (max-width:1024px){.side-shot{display:none}}
 
 .feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
@@ -309,13 +321,15 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 .prof-sub{margin-bottom:30px}
 .prof-user{display:flex;align-items:center;gap:16px}
 .avatar-form{display:inline-flex}
-.acc-avatar{overflow:hidden}
+/* обёртка БЕЗ обрезки — чтобы плюсик не съедался */
+.avatar-edit{position:relative;cursor:pointer;display:inline-flex;overflow:visible}
+/* круглая картинка обрезается ВНУТРЕННИМ слоем */
+.avatar-edit .acc-avatar{overflow:hidden}
 .acc-avatar img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
-.avatar-edit{position:relative;cursor:pointer}
-.avatar-cam{position:absolute;right:-2px;bottom:-2px;width:22px;height:22px;border-radius:50%;
+.avatar-cam{position:absolute;right:-3px;bottom:-3px;z-index:3;width:22px;height:22px;border-radius:50%;
   display:grid;place-items:center;font-size:15px;font-weight:700;line-height:1;color:#fff;
   background:linear-gradient(135deg,var(--accent),var(--accent2));border:2px solid var(--bg2);
-  opacity:.92;transition:.15s}
+  box-shadow:0 2px 6px rgba(0,0,0,.4);transition:.15s}
 .avatar-edit:hover .avatar-cam{transform:scale(1.12)}
 /* миниатюра аватара в админке */
 .u-cell{display:flex;align-items:center;gap:9px}
