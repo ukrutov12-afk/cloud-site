@@ -262,7 +262,10 @@ app.post('/login', async (req, res, next) => {
     const { email, password } = req.body;
     const form = { email };
     if (!email || !password) { rerr(res, 'flash.err_fields'); return res.render('login', { page: 'login', form }); }
-    const user = await db.findByEmail(email);
+    // вход по email ИЛИ по имени пользователя
+    const id = String(email).trim();
+    let user = await db.findByEmail(id);
+    if (!user) user = await db.findByUsername(id);
     if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
       rerr(res, 'flash.err_creds');
       return res.render('login', { page: 'login', form });

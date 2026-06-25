@@ -5,8 +5,8 @@
     <h2 class="auth-title"><%= t('auth.login_title') %></h2>
     <form action="/login" method="post" class="form">
       <label class="field">
-        <span><%= t('auth.email') %></span>
-        <input type="email" name="email" value="<%= form.email || '' %>" required autocomplete="email">
+        <span><%= t('auth.login_id') %></span>
+        <input type="text" name="email" value="<%= form.email || '' %>" required autocomplete="username">
       </label>
       <label class="field">
         <span><%= t('auth.password') %></span>

@@ -11,7 +11,7 @@
     "logout": "Log out"
   },
   "hero": {
-    "badge": "Minecraft 1.21.4 • Fabric",
+    "badge": "Minecraft 1.21.11 • Fabric",
     "title": "Cloud — a client that reads the game",
     "subtitle": "Smooth Liquid Glass interface, clean bypasses, thoughtful modules. Built for people who care about quality.",
     "cta_buy": "Buy the client",
@@ -69,6 +69,7 @@
     "register_title": "Create an account",
     "username": "Username",
     "email": "Email",
+    "login_id": "Email or username",
     "password": "Password",
     "password2": "Repeat password",
     "login_btn": "Log in",
@@ -125,9 +126,9 @@
     "subtitle": "Didn't find an answer? Write to us — we reply fast.",
     "faq": "FAQ",
     "q1": "How do I install the client?",
-    "a1": "Download the .jar from your account, drop it into the mods folder next to Fabric Loader for 1.21.4, and launch via the Fabric profile.",
+    "a1": "Download the .jar from your account, drop it into the mods folder next to Fabric Loader for 1.21.11, and launch via the Fabric profile.",
     "q2": "Are other versions supported?",
-    "a2": "The main version right now is 1.21.4. Support for newer versions is added as they release.",
+    "a2": "The main version right now is 1.21.11. Support for newer versions is added as they release.",
     "q3": "Can I get banned?",
     "a3": "Any third-party software carries risk. We keep bypasses careful, but no one can guarantee safety.",
     "q4": "How do refunds work?",
