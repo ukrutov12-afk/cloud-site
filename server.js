@@ -35,12 +35,19 @@ function t(lang, keyPath) {
   return cur === undefined ? keyPath : cur;
 }
 
-// ─────────────────────────── Тарифы ───────────────────────────
+// ─────────────────────────── Тарифы (₽) ───────────────────────────
 const PLANS = {
-  month:    { id: 'month',    price: 6,  currency: 'EUR', months: 1 },
-  season:   { id: 'season',   price: 14, currency: 'EUR', months: 3, popular: true },
-  lifetime: { id: 'lifetime', price: 39, currency: 'EUR', months: 0 }
+  month:         { id: 'month',         price: 129, currency: 'RUB', months: 1 },
+  season:        { id: 'season',        price: 349, currency: 'RUB', months: 3, popular: true },
+  lifetime:      { id: 'lifetime',      price: 799, currency: 'RUB', months: 0 },
+  lifetime_beta: { id: 'lifetime_beta', price: 999, currency: 'RUB', months: 0, beta: true }
 };
+// Пробный период — цена за N дней (1..7). Один раз на аккаунт.
+const TRIAL_PRICES = { 1: 39, 2: 42, 3: 45, 4: 49, 5: 52, 6: 55, 7: 59 };
+function trialPrice(days) {
+  days = Math.max(1, Math.min(7, parseInt(days, 10) || 1));
+  return TRIAL_PRICES[days];
+}
 
 // ─────────────────────────── Админы ───────────────────────────
 // ADMIN_EMAILS = список email через запятую (в окружении Render). Админ
@@ -133,15 +140,42 @@ const isEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || ''));
 // ─────────────────────────── Маршруты ───────────────────────────
 app.get('/', (req, res) => res.render('index', { page: 'home' }));
 
-app.get('/buy', (req, res) => {
-  const planId = PLANS[req.query.plan] ? req.query.plan : 'season';
-  res.render('buy', { page: 'buy', plan: PLANS[planId] });
+app.get('/buy', async (req, res, next) => {
+  try {
+    const planId = PLANS[req.query.plan] ? req.query.plan : 'lifetime';
+    // использовал ли пользователь пробный период
+    let trialUsed = false;
+    if (req.session.userId) {
+      const orders = await db.getOrdersByUser(req.session.userId);
+      trialUsed = orders.some(o => String(o.plan).startsWith('trial'));
+    }
+    res.render('buy', { page: 'buy', plan: PLANS[planId], trialPrices: TRIAL_PRICES, trialUsed });
+  } catch (e) { next(e); }
 });
 
 app.post('/buy', requireAuth, async (req, res, next) => {
   try {
-    const plan = PLANS[req.body.plan] || PLANS.season;
+    let plan = PLANS[req.body.plan] || PLANS.lifetime;
+    // чекбокс беты применим только к «навсегда»
+    if (plan.id === 'lifetime' && (req.body.beta === 'on' || req.body.beta === '1')) {
+      plan = PLANS.lifetime_beta;
+    }
     await db.createOrder({ userId: req.session.userId, plan: plan.id, price: plan.price, currency: plan.currency });
+    flash(req, 'success', 'buy.order_created');
+    res.redirect('/account');
+  } catch (e) { next(e); }
+});
+
+// Пробный период — один раз на аккаунт
+app.post('/buy/trial', requireAuth, async (req, res, next) => {
+  try {
+    const orders = await db.getOrdersByUser(req.session.userId);
+    if (orders.some(o => String(o.plan).startsWith('trial'))) {
+      flash(req, 'error', 'buy.trial_used');
+      return res.redirect('/buy');
+    }
+    const days = Math.max(1, Math.min(7, parseInt(req.body.days, 10) || 1));
+    await db.createOrder({ userId: req.session.userId, plan: 'trial_' + days + 'd', price: trialPrice(days), currency: 'RUB' });
     flash(req, 'success', 'buy.order_created');
     res.redirect('/account');
   } catch (e) { next(e); }

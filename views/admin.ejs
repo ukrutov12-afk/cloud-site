@@ -12,7 +12,7 @@
     <div class="stat-card"><span class="stat-k">Заказы</span><b id="m-orders"><%= stats.orders %></b></div>
     <div class="stat-card good"><span class="stat-k">Оплачено</span><b id="m-paid"><%= stats.paid %></b></div>
     <div class="stat-card warn"><span class="stat-k">В ожидании</span><b id="m-pending"><%= stats.pending %></b></div>
-    <div class="stat-card accent"><span class="stat-k">Выручка</span><b>€<span id="m-rev"><%= stats.revenue %></span></b></div>
+    <div class="stat-card accent"><span class="stat-k">Выручка</span><b><span id="m-rev"><%= stats.revenue %></span> ₽</b></div>
     <div class="stat-card"><span class="stat-k">Админы</span><b><%= stats.admins %></b></div>
   </div>
 
@@ -72,7 +72,7 @@
               <td class="muted small"><%= o.id %></td>
               <td class="muted small"><%= o.userId %></td>
               <td><%= o.plan %></td>
-              <td>€<%= o.price %></td>
+              <td><%= o.price %> ₽</td>
               <td><span class="status status-<%= o.status %>"><%= o.status %></span></td>
               <td class="muted small"><%= new Date(o.createdAt).toLocaleString() %></td>
               <td>

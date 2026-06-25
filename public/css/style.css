@@ -32,27 +32,40 @@ body{
 a{color:inherit;text-decoration:none}
 img{max-width:100%}
 
-/* фоновые орбы (мягкое свечение) */
+/* фоновая картинка — еле видна, почти сливается с фоном */
+body::before{content:"";position:fixed;inset:0;z-index:-3;
+  background:url('/img/bg.jpg') center/cover no-repeat fixed;
+  opacity:.07;filter:saturate(115%);}
+/* затемняющий слой поверх картинки, чтобы оставалась тёмная база */
+body::after{content:"";position:fixed;inset:0;z-index:-3;
+  background:linear-gradient(180deg, rgba(7,10,18,.86), rgba(7,10,18,.92));}
+
+/* фоновые орбы (мягкое свечение) — поверх картинки, это «дизайн-засветы» */
 .bg-orbs{position:fixed;inset:0;z-index:-2;overflow:hidden;background:
   radial-gradient(1200px 700px at 80% -10%, rgba(59,155,255,.12), transparent 60%),
-  radial-gradient(900px 600px at 0% 10%, rgba(124,92,255,.10), transparent 60%),
-  linear-gradient(180deg,var(--bg),var(--bg2));}
+  radial-gradient(900px 600px at 0% 10%, rgba(124,92,255,.10), transparent 60%);}
 .bg-orbs span{position:absolute;border-radius:50%;filter:blur(80px);opacity:.5;animation:float 18s ease-in-out infinite}
 .bg-orbs span:nth-child(1){width:420px;height:420px;background:rgba(59,155,255,.30);top:-80px;right:8%}
 .bg-orbs span:nth-child(2){width:360px;height:360px;background:rgba(124,92,255,.26);top:40%;left:-100px;animation-delay:-6s}
 .bg-orbs span:nth-child(3){width:300px;height:300px;background:rgba(54,211,153,.14);bottom:-60px;right:30%;animation-delay:-11s}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-40px)}}
 
-/* ===== Навигация ===== */
+/* ===== Навигация — Liquid Glass (на всю ширину, без скруглений) ===== */
 .nav{position:sticky;top:0;z-index:50;
-  backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);
-  background:linear-gradient(180deg, rgba(10,14,26,.72), rgba(10,14,26,.42));
-  border-bottom:1px solid var(--stroke);}
-.nav-inner{max-width:var(--maxw);margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:22px}
+  backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+  background:linear-gradient(180deg, rgba(16,21,34,.55), rgba(12,16,26,.30));
+  border-bottom:1px solid var(--stroke-strong);
+  box-shadow:0 8px 32px rgba(0,0,0,.35);position:sticky;overflow:hidden}
+/* верхний световой блик стекла по всей ширине */
+.nav::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent)}
+/* мягкое внутреннее свечение сверху */
+.nav::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 40%)}
+.nav-inner{max-width:var(--maxw);margin:0 auto;padding:13px 22px;display:flex;align-items:center;gap:22px;position:relative;z-index:1}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:.2px}
-.brand-mark{width:22px;height:22px;border-radius:7px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  box-shadow:0 0 18px rgba(59,155,255,.55), inset 0 0 8px rgba(255,255,255,.4)}
+.brand-logo{width:30px;height:30px;object-fit:contain;
+  filter:drop-shadow(0 0 10px rgba(59,155,255,.5))}
 .brand-text{background:linear-gradient(90deg,#fff,#bcd4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .nav-links{display:flex;gap:6px;margin-left:8px}
 .nav-links a{padding:8px 14px;border-radius:10px;color:var(--muted);font-weight:500;font-size:14.5px;transition:.16s}
@@ -146,8 +159,16 @@ img{max-width:100%}
 .feature-card{background:var(--panel);border:1px solid var(--stroke);border-radius:var(--radius);padding:24px;
   backdrop-filter:blur(14px);transition:.2s}
 .feature-card:hover{transform:translateY(-4px);border-color:var(--stroke-strong)}
-.feature-ico{width:46px;height:46px;display:grid;place-items:center;font-size:22px;border-radius:13px;
-  background:var(--accent-soft);border:1px solid rgba(59,155,255,.25);margin-bottom:14px}
+.feature-ico{width:46px;height:46px;display:grid;place-items:center;border-radius:13px;
+  background:var(--accent-soft);border:1px solid rgba(59,155,255,.25);margin-bottom:14px;color:#9ecbff}
+.feature-ico svg{width:24px;height:24px}
+
+/* баннер призыва внизу главной (вместо блока цен) */
+.cta-band{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;
+  background:linear-gradient(135deg, rgba(59,155,255,.14), rgba(124,92,255,.12));
+  border:1px solid var(--stroke-strong);border-radius:var(--radius);padding:34px 36px;
+  backdrop-filter:blur(16px);box-shadow:var(--shadow)}
+.cta-band h2{font-size:26px;font-weight:800;margin-bottom:6px}
 .feature-card h3{font-size:16.5px;margin-bottom:8px}
 .feature-card p{color:var(--muted);font-size:14px}
 
@@ -171,13 +192,34 @@ img{max-width:100%}
 
 /* ===== checkout ===== */
 .checkout{display:grid;grid-template-columns:1.4fr .8fr;gap:22px;align-items:start}
-.plan-picker{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
-.plan-opt{display:flex;justify-content:space-between;align-items:center;padding:15px 18px;border-radius:13px;
-  border:1px solid var(--stroke);background:rgba(255,255,255,.03);transition:.16s}
+.plans-heading{font-size:18px;font-weight:700;margin:30px 0 14px}
+.plan-picker{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.plan-opt{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 18px;border-radius:13px;
+  border:1px solid var(--stroke);background:rgba(255,255,255,.03);transition:.16s;cursor:pointer}
 .plan-opt:hover{border-color:var(--stroke-strong)}
 .plan-opt.sel{border-color:var(--accent);background:var(--accent-soft)}
-.po-name{font-weight:600}
+.plan-opt input{accent-color:var(--accent);width:17px;height:17px;cursor:pointer;flex-shrink:0}
+.po-name{font-weight:600;flex:1}
 .po-price{font-weight:800;font-size:18px}
+
+/* пробный период */
+.trial-panel{margin-bottom:26px;border-color:rgba(124,92,255,.3)}
+.trial-info{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.trial-days-lbl{font-size:16px;color:var(--muted)}
+.trial-days-lbl b{font-size:24px;color:#fff;font-weight:800}
+.trial-price-lbl b{font-size:26px;font-weight:800;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.trial-range{-webkit-appearance:none;appearance:none;width:100%;height:7px;border-radius:999px;
+  background:linear-gradient(90deg,var(--accent) 33%, rgba(255,255,255,.12) 33%);outline:none;cursor:pointer}
+.trial-range::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:#fff;border:3px solid var(--accent);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.trial-range::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--accent);cursor:pointer}
+.trial-scale{display:flex;justify-content:space-between;margin-top:7px;padding:0 2px;color:var(--muted2);font-size:11.5px}
+
+/* чекбокс беты */
+.beta-check{display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:12px;cursor:pointer;
+  border:1px dashed rgba(124,92,255,.4);background:rgba(124,92,255,.07);transition:.16s;font-size:14.5px}
+.beta-check input{accent-color:var(--accent2);width:17px;height:17px;cursor:pointer}
 .notice{padding:14px 16px;border-radius:12px;background:var(--accent-soft);border:1px solid rgba(59,155,255,.3);
   color:#cfe2ff;font-size:14.5px;margin-bottom:16px}
 .notice.success{background:rgba(54,211,153,.12);border-color:rgba(54,211,153,.4);color:#bdf5dd}

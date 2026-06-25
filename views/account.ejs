@@ -15,7 +15,17 @@
       <div class="acc-plan">
         <span class="muted"><%= t('account.your_plan') %></span>
         <strong>
-          <%= effectivePlan ? t('pricing.' + effectivePlan + '_t') : t('account.no_plan') %>
+          <%
+            var planLabel = t('account.no_plan');
+            if (effectivePlan) {
+              if (String(effectivePlan).indexOf('trial_') === 0) {
+                planLabel = t('buy.trial_title') + ' (' + effectivePlan.replace('trial_','').replace('d','') + ' ' + t('buy.trial_days') + ')';
+              } else {
+                planLabel = t('pricing.' + effectivePlan + '_t');
+              }
+            }
+          %>
+          <%= planLabel %>
           <% if (admin) { %><span class="admin-badge">ADMIN ∞</span><% } %>
         </strong>
       </div>
@@ -36,7 +46,7 @@
           <% orders.forEach(function(o){ %>
             <tr>
               <td><%= t('pricing.' + o.plan + '_t') %></td>
-              <td>€<%= o.price %></td>
+              <td><%= o.price %> ₽</td>
               <td><span class="status status-<%= o.status %>"><%= o.status==='paid' ? t('account.status_paid') : t('account.status_pending') %></span></td>
               <td class="muted small"><%= new Date(o.createdAt).toLocaleDateString() %></td>
             </tr>

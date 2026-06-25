@@ -3,42 +3,119 @@
 <section class="section narrow">
   <h2 class="section-title"><%= t('buy.title') %></h2>
 
-  <div class="checkout">
-    <div class="checkout-main panel">
-      <h3 class="panel-h"><%= t('buy.choose_plan') %></h3>
-      <div class="plan-picker">
-        <% Object.values(plans).forEach(function(p){ %>
-          <a href="/buy?plan=<%= p.id %>" class="plan-opt <%= p.id===plan.id ? 'sel' : '' %>">
-            <span class="po-name"><%= t('pricing.' + p.id + '_t') %></span>
-            <span class="po-price">€<%= p.price %></span>
-          </a>
-        <% }); %>
+  <!-- ───── Пробный период ───── -->
+  <div class="panel trial-panel">
+    <h3 class="panel-h"><%= t('buy.trial_title') %></h3>
+    <p class="muted small" style="margin-bottom:18px"><%= t('buy.trial_desc') %></p>
+
+    <% if (trialUsed) { %>
+      <div class="notice"><%= t('buy.trial_used') %></div>
+    <% } else { %>
+      <form action="/buy/trial" method="post">
+        <div class="trial-info">
+          <span class="trial-days-lbl"><b id="trialDays">3</b> <span id="trialDaysWord"><%= t('buy.trial_days') %></span></span>
+          <span class="trial-price-lbl"><b id="trialPrice">45</b> ₽</span>
+        </div>
+        <input type="range" min="1" max="7" value="3" name="days" id="trialRange" class="trial-range">
+        <div class="trial-scale"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+        <% if (!user) { %>
+          <a href="/login" class="btn btn-ghost btn-block" style="margin-top:16px"><%= t('buy.need_login') %></a>
+        <% } else { %>
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top:16px">
+            <%= t('buy.trial_btn') %> <span id="trialBtnPrice">45</span> ₽
+          </button>
+        <% } %>
+      </form>
+    <% } %>
+  </div>
+
+  <!-- ───── Полный доступ ───── -->
+  <h3 class="plans-heading"><%= t('buy.plans_heading') %></h3>
+
+  <form action="/buy" method="post">
+    <div class="checkout">
+      <div class="checkout-main panel">
+        <h3 class="panel-h"><%= t('buy.choose_plan') %></h3>
+        <div class="plan-picker">
+          <% ['month','season','lifetime'].forEach(function(id){ var p = plans[id]; %>
+            <label class="plan-opt <%= id===plan.id ? 'sel' : '' %>" data-price="<%= p.price %>" data-name="<%= t('pricing.'+id+'_t') %>" data-id="<%= id %>">
+              <input type="radio" name="plan" value="<%= id %>" <%= id===plan.id ? 'checked' : '' %>>
+              <span class="po-name"><%= t('pricing.'+id+'_t') %></span>
+              <span class="po-price"><%= p.price %> ₽</span>
+            </label>
+          <% }); %>
+        </div>
+
+        <label class="beta-check" id="betaWrap">
+          <input type="checkbox" name="beta" id="betaChk">
+          <span><%= t('buy.beta_addon') %></span>
+        </label>
+
+        <% if (!user) { %>
+          <div class="notice" style="margin-top:18px"><%= t('buy.need_login') %></div>
+          <div class="row-gap">
+            <a href="/login" class="btn btn-primary"><%= t('nav.login') %></a>
+            <a href="/register" class="btn btn-ghost"><%= t('nav.register') %></a>
+          </div>
+        <% } else { %>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" style="margin-top:18px"><%= t('buy.pay_btn') %></button>
+        <% } %>
+        <p class="muted small" style="margin-top:14px"><%= t('buy.note') %></p>
       </div>
 
-      <% if (!user) { %>
-        <div class="notice"><%= t('buy.need_login') %></div>
-        <div class="row-gap">
-          <a href="/login" class="btn btn-primary"><%= t('nav.login') %></a>
-          <a href="/register" class="btn btn-ghost"><%= t('nav.register') %></a>
-        </div>
-      <% } else { %>
-        <form action="/buy" method="post">
-          <input type="hidden" name="plan" value="<%= plan.id %>">
-          <button type="submit" class="btn btn-primary btn-lg btn-block"><%= t('buy.pay_btn') %></button>
-        </form>
-      <% } %>
-      <p class="muted small"><%= t('buy.note') %></p>
+      <aside class="checkout-side panel">
+        <h3 class="panel-h"><%= t('buy.summary') %></h3>
+        <div class="sum-row"><span id="sumName"><%= t('pricing.'+plan.id+'_t') %></span><span id="sumBase"><%= plan.price %> ₽</span></div>
+        <div class="sum-row" id="sumBetaRow" style="display:none"><span><%= t('buy.beta_addon') %></span><span>+200 ₽</span></div>
+        <div class="sum-total"><span><%= t('buy.summary') %></span><strong id="sumTotal"><%= plan.price %> ₽</strong></div>
+      </aside>
     </div>
-
-    <aside class="checkout-side panel">
-      <h3 class="panel-h"><%= t('buy.summary') %></h3>
-      <div class="sum-row"><span><%= t('pricing.' + plan.id + '_t') %></span><span>€<%= plan.price %></span></div>
-      <div class="sum-total"><span><%= t('buy.summary') %></span><strong>€<%= plan.price %></strong></div>
-      <ul class="price-feats">
-        <% (Array.isArray(t('pricing.'+plan.id+'_f'))?t('pricing.'+plan.id+'_f'):[]).forEach(function(ft){ %><li><%= ft %></li><% }); %>
-      </ul>
-    </aside>
-  </div>
+  </form>
 </section>
+
+<script>
+  // ── триал-ползунок ──
+  var TRIAL = <%- JSON.stringify(trialPrices) %>;
+  var range = document.getElementById('trialRange');
+  if (range) {
+    var dWord = { one: '<%= t("buy.trial_day") %>', many: '<%= t("buy.trial_days") %>' };
+    function updTrial(){
+      var d = +range.value, pr = TRIAL[d];
+      document.getElementById('trialDays').textContent = d;
+      document.getElementById('trialDaysWord').textContent = d === 1 ? dWord.one : dWord.many;
+      document.getElementById('trialPrice').textContent = pr;
+      var btn = document.getElementById('trialBtnPrice'); if (btn) btn.textContent = pr;
+      var pct = (d - 1) / 6 * 100;
+      range.style.background = 'linear-gradient(90deg, var(--accent) ' + pct + '%, rgba(255,255,255,.12) ' + pct + '%)';
+    }
+    range.addEventListener('input', updTrial); updTrial();
+  }
+
+  // ── выбор тарифа + бета ──
+  var BETA_ADD = 200;
+  var opts = document.querySelectorAll('.plan-opt');
+  var betaChk = document.getElementById('betaChk');
+  var betaWrap = document.getElementById('betaWrap');
+  function curPlan(){ var c = document.querySelector('.plan-opt input:checked'); return c ? c.closest('.plan-opt') : null; }
+  function updSum(){
+    var el = curPlan(); if (!el) return;
+    var id = el.dataset.id, base = +el.dataset.price, name = el.dataset.name;
+    var isLife = id === 'lifetime';
+    // бета только для «навсегда»
+    betaWrap.style.opacity = isLife ? '1' : '.4';
+    betaChk.disabled = !isLife;
+    if (!isLife) betaChk.checked = false;
+    var beta = isLife && betaChk.checked;
+    var total = base + (beta ? BETA_ADD : 0);
+    document.getElementById('sumName').textContent = name + (beta ? ' + Beta' : '');
+    document.getElementById('sumBase').textContent = base + ' ₽';
+    document.getElementById('sumBetaRow').style.display = beta ? 'flex' : 'none';
+    document.getElementById('sumTotal').textContent = total + ' ₽';
+    opts.forEach(function(o){ o.classList.toggle('sel', o === el); });
+  }
+  opts.forEach(function(o){ o.querySelector('input').addEventListener('change', updSum); });
+  if (betaChk) betaChk.addEventListener('change', updSum);
+  updSum();
+</script>
 
 <%- include('partials/footer') %>

@@ -22,8 +22,8 @@
   },
   "features": {
     "title": "Why Cloud",
-    "f1_t": "Liquid Glass UI",
-    "f1_d": "Real shader-based background blur, highlights and glass panels. An interface that's a pleasure to open.",
+    "f1_t": "Best legit on the market",
+    "f1_d": "Top-tier yet affordable legit software — clean, working features with no overpaying and no needless flags.",
     "f2_t": "Subtle bypasses",
     "f2_d": "Careful rotations, movement correction, behavior tuned for popular anti-cheats. No needless flags.",
     "f3_t": "Rich HUD",
@@ -33,7 +33,7 @@
   },
   "pricing": {
     "title": "Pricing",
-    "subtitle": "One client — pick a term. One-time payment, no trap subscriptions.",
+    "subtitle": "Pick the term that fits you — from a trial day to lifetime access.",
     "most_popular": "Popular",
     "per_month": "/ mo",
     "buy_btn": "Buy",
@@ -42,16 +42,26 @@
     "season_t": "Season (3 mo)",
     "season_f": ["All modules", "Priority updates", "Priority support"],
     "lifetime_t": "Lifetime",
-    "lifetime_f": ["All modules forever", "All future updates", "VIP support", "Early access to betas"]
+    "lifetime_f": ["All modules forever", "All future updates", "VIP support"],
+    "lifetime_beta_t": "Lifetime + Beta",
+    "lifetime_beta_f": ["Everything in Lifetime", "Beta test access", "Early builds and new features"]
   },
   "buy": {
     "title": "Checkout",
-    "choose_plan": "Selected plan",
+    "choose_plan": "Pick a plan",
     "need_login": "Please log in or sign up to complete the purchase.",
     "pay_btn": "Proceed to payment",
     "note": "After payment the key appears in your account. Refunds follow the refund policy.",
     "order_created": "Order created. This is a demo payment flow.",
-    "summary": "Total"
+    "summary": "Total",
+    "trial_title": "Try the client",
+    "trial_desc": "Trial period — once per account. Pick the length with the slider.",
+    "trial_day": "day",
+    "trial_days": "days",
+    "trial_btn": "Try for",
+    "trial_used": "The trial period has already been used on this account.",
+    "beta_addon": "Add beta test access (+200 ₽)",
+    "plans_heading": "Full access"
   },
   "auth": {
     "login_title": "Log in to your account",

@@ -35,37 +35,31 @@
 <section class="features section">
   <h2 class="section-title"><%= t('features.title') %></h2>
   <div class="feature-grid">
-    <% [['🪟','f1'],['🛡️','f2'],['🎛️','f3'],['🚀','f4']].forEach(function(f){ %>
+    <%
+      const icons = {
+        f1: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.6 5.6L20.5 8.4l-4.3 4.1 1 6L12 15.8 6.8 18.5l1-6L3.5 8.4l5.9-.8z"/></svg>',
+        f2: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9.5 12l1.8 1.8L15 9.8"/></svg>',
+        f3: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg>',
+        f4: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 4v4h-4"/></svg>'
+      };
+    %>
+    <% ['f1','f2','f3','f4'].forEach(function(f){ %>
       <div class="feature-card">
-        <div class="feature-ico"><%= f[0] %></div>
-        <h3><%= t('features.' + f[1] + '_t') %></h3>
-        <p><%= t('features.' + f[1] + '_d') %></p>
+        <div class="feature-ico"><%- icons[f] %></div>
+        <h3><%= t('features.' + f + '_t') %></h3>
+        <p><%= t('features.' + f + '_d') %></p>
       </div>
     <% }); %>
   </div>
 </section>
 
-<section class="pricing section" id="pricing">
-  <h2 class="section-title"><%= t('pricing.title') %></h2>
-  <p class="section-sub"><%= t('pricing.subtitle') %></p>
-  <div class="price-grid">
-    <% Object.values(plans).forEach(function(p){
-         const key = p.id;
-         const feats = t('pricing.' + key + '_f');
-         const perMo = p.months > 0 ? (p.price / p.months) : null; %>
-      <div class="price-card <%= p.popular ? 'popular' : '' %>">
-        <% if (p.popular) { %><span class="price-tag"><%= t('pricing.most_popular') %></span><% } %>
-        <h3><%= t('pricing.' + key + '_t') %></h3>
-        <div class="price">
-          <span class="amount">€<%= p.price %></span>
-          <% if (perMo) { %><span class="per">€<%= perMo.toFixed(2) %><%= t('pricing.per_month') %></span><% } %>
-        </div>
-        <ul class="price-feats">
-          <% (Array.isArray(feats)?feats:[]).forEach(function(ft){ %><li><%= ft %></li><% }); %>
-        </ul>
-        <a href="/buy?plan=<%= key %>" class="btn <%= p.popular ? 'btn-primary' : 'btn-ghost' %> btn-block"><%= t('pricing.buy_btn') %></a>
-      </div>
-    <% }); %>
+<section class="section">
+  <div class="cta-band">
+    <div>
+      <h2><%= t('hero.cta_buy') %></h2>
+      <p class="muted"><%= t('pricing.subtitle') %></p>
+    </div>
+    <a href="/buy" class="btn btn-primary btn-lg"><%= t('nav.buy') %></a>
   </div>
 </section>
 
