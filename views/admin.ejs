@@ -43,7 +43,7 @@
               else if (u.subUntil) { var dl = Math.max(0, Math.ceil((new Date(u.subUntil)-new Date())/86400000)); subTxt = dl + ' дн.'; }
             %>
             <tr>
-              <td><%= u.username %></td>
+              <td><span class="u-cell"><span class="u-av"><% if (u.avatar) { %><img src="<%= u.avatar %>" alt=""><% } else { %><%= (u.username||'C').charAt(0).toUpperCase() %><% } %></span><%= u.username %></span></td>
               <td class="muted"><%= u.email %></td>
               <td><%= subTxt %></td>
               <td><% if (isAdminFn(u)) { %><span class="admin-badge">ADMIN</span><% } else { %><span class="muted small">user</span><% } %></td>

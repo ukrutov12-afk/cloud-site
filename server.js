@@ -8,6 +8,9 @@ const fs = require('fs');
 const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
+const Jimp = require('jimp');
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
 const db = require('./db');
 
 const app = express();
@@ -311,6 +314,23 @@ app.post('/account/password', requireAuth, async (req, res, next) => {
     flash(req, 'success', 'account.pass_changed');
     res.redirect('/account');
   } catch (e) { next(e); }
+});
+
+// смена аватара (хранится на сервере в БД, видна везде где показывается юзер)
+app.post('/account/avatar', requireAuth, upload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file || !req.file.mimetype || !req.file.mimetype.startsWith('image/')) {
+      flash(req, 'error', 'account.avatar_err'); return res.redirect('/account');
+    }
+    const img = await Jimp.read(req.file.buffer);
+    img.cover(160, 160).quality(74);
+    const dataUrl = await img.getBase64Async(Jimp.MIME_JPEG);
+    await db.updateUser(req.session.userId, { avatar: dataUrl });
+    flash(req, 'success', 'account.avatar_ok');
+  } catch (e) {
+    flash(req, 'error', 'account.avatar_err');
+  }
+  res.redirect('/account');
 });
 
 // сброс HWID

@@ -15,7 +15,13 @@
 
   <!-- юзер -->
   <div class="prof-user">
-    <div class="acc-avatar"><%= (account.username||'C').charAt(0).toUpperCase() %></div>
+    <form action="/account/avatar" method="post" enctype="multipart/form-data" class="avatar-form">
+      <label class="acc-avatar avatar-edit" title="<%= t('account.btn_avatar') %>">
+        <% if (account.avatar) { %><img src="<%= account.avatar %>" alt=""><% } else { %><%= (account.username||'C').charAt(0).toUpperCase() %><% } %>
+        <input type="file" name="avatar" accept="image/*" hidden onchange="this.form.submit()">
+        <span class="avatar-cam">＋</span>
+      </label>
+    </form>
     <div>
       <div class="pu-name"><%= account.username %></div>
       <div class="muted small"><%= account.email %></div>

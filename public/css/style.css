@@ -161,10 +161,10 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
   background:linear-gradient(180deg,#fff,#aebfdc);-webkit-background-clip:text;background-clip:text;color:transparent}
 .hero-sub{font-size:18px;color:var(--muted);max-width:520px;margin-bottom:28px}
 .hero-cta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:38px}
-.hero-stats{display:flex;gap:34px}
-.hero-stats strong{display:block;font-size:26px;font-weight:800}
+.hero-stats{display:flex;gap:34px;align-items:flex-start}
+.hero-stats strong{display:block;font-size:26px;line-height:1.15;font-weight:800;white-space:nowrap}
 .hero-stats span{color:var(--muted2);font-size:13.5px}
-.hero-stats .stat-word{font-size:22px;
+.hero-stats .stat-word{font-size:26px;
   background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
 
 /* hero glass mock */
@@ -188,17 +188,17 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 /* ===== features ===== */
 .features{position:relative}
 /* плавающие скрины софта ПО БОКАМ (в полях, выглядывают с краёв), не за карточками */
-.side-shot{position:absolute;top:50%;width:330px;height:205px;border-radius:14px;
-  background-size:cover;background-position:center;opacity:.6;z-index:0;pointer-events:none;
-  border:1px solid var(--stroke-strong);box-shadow:0 20px 50px rgba(0,0,0,.5)}
-/* правый край всегда на ~10px левее контента (left+width = 12) — без наложения */
-.side-shot.left{left:-318px;transform:translateY(-50%) rotate(-7deg);
-  -webkit-mask-image:linear-gradient(to right, transparent, #000 72%);
-  mask-image:linear-gradient(to right, transparent, #000 72%)}
-.side-shot.right{right:-318px;transform:translateY(-50%) rotate(7deg);
-  -webkit-mask-image:linear-gradient(to left, transparent, #000 72%);
-  mask-image:linear-gradient(to left, transparent, #000 72%)}
-@media (max-width:1180px){.side-shot{display:none}}
+/* крупные ФОНОВЫЕ скрины по бокам (за контентом), сильно тают к краям */
+.side-shot{position:absolute;top:50%;width:620px;height:380px;border-radius:18px;
+  background-size:cover;background-position:center;opacity:.3;z-index:-1;pointer-events:none;
+  filter:blur(1.5px)}
+.side-shot.left{left:-300px;transform:translateY(-50%) rotate(-6deg);
+  -webkit-mask-image:linear-gradient(115deg, #000 8%, rgba(0,0,0,.5) 42%, transparent 72%);
+  mask-image:linear-gradient(115deg, #000 8%, rgba(0,0,0,.5) 42%, transparent 72%)}
+.side-shot.right{right:-300px;transform:translateY(-50%) rotate(6deg);
+  -webkit-mask-image:linear-gradient(245deg, #000 8%, rgba(0,0,0,.5) 42%, transparent 72%);
+  mask-image:linear-gradient(245deg, #000 8%, rgba(0,0,0,.5) 42%, transparent 72%)}
+@media (max-width:1024px){.side-shot{display:none}}
 
 .feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
 .feature-card{background:rgba(15,20,32,.20);border:1px solid var(--stroke);border-radius:var(--radius);padding:24px;
@@ -308,6 +308,20 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 .prof-title{font-size:40px;font-weight:800;letter-spacing:-1px}
 .prof-sub{margin-bottom:30px}
 .prof-user{display:flex;align-items:center;gap:16px}
+.avatar-form{display:inline-flex}
+.acc-avatar{overflow:hidden}
+.acc-avatar img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+.avatar-edit{position:relative;cursor:pointer}
+.avatar-cam{position:absolute;right:-2px;bottom:-2px;width:22px;height:22px;border-radius:50%;
+  display:grid;place-items:center;font-size:15px;font-weight:700;line-height:1;color:#fff;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));border:2px solid var(--bg2);
+  opacity:.92;transition:.15s}
+.avatar-edit:hover .avatar-cam{transform:scale(1.12)}
+/* миниатюра аватара в админке */
+.u-cell{display:flex;align-items:center;gap:9px}
+.u-av{width:26px;height:26px;border-radius:50%;flex-shrink:0;overflow:hidden;display:grid;place-items:center;
+  font-size:12px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.u-av img{width:100%;height:100%;object-fit:cover}
 .pu-name{font-size:19px;font-weight:700}
 .prof-hr{border:none;border-top:1px solid var(--stroke);margin:24px 0}
 .prof-section-label{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;

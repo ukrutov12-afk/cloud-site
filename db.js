@@ -47,13 +47,14 @@ async function initPg() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_plan  TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_until TIMESTAMPTZ;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_forever BOOLEAN DEFAULT false;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;
   `);
 }
 function rowUser(r) {
   if (!r) return null;
   return {
     id: r.id, username: r.username, email: r.email, passwordHash: r.password_hash,
-    plan: r.plan, uid: r.uid, hwid: r.hwid,
+    plan: r.plan, uid: r.uid, hwid: r.hwid, avatar: r.avatar,
     subPlan: r.sub_plan,
     subUntil: r.sub_until instanceof Date ? r.sub_until.toISOString() : r.sub_until,
     subForever: !!r.sub_forever,
@@ -61,7 +62,7 @@ function rowUser(r) {
   };
 }
 const USER_COLS = { plan: 'plan', hwid: 'hwid', uid: 'uid', passwordHash: 'password_hash',
-  subPlan: 'sub_plan', subUntil: 'sub_until', subForever: 'sub_forever' };
+  subPlan: 'sub_plan', subUntil: 'sub_until', subForever: 'sub_forever', avatar: 'avatar' };
 function rowOrder(r) {
   return r && {
     id: r.id, userId: r.user_id, plan: r.plan, price: Number(r.price), currency: r.currency,
@@ -153,7 +154,7 @@ const fileApi = {
     const user = {
       id: newId('u'), username: username.trim(), email: email.toLowerCase().trim(),
       passwordHash, plan: null, uid: 10000 + Math.floor(Math.random() * 89999),
-      hwid: null, subPlan: null, subUntil: null, subForever: false,
+      hwid: null, avatar: null, subPlan: null, subUntil: null, subForever: false,
       createdAt: new Date().toISOString()
     };
     users.push(user); writeJSON(USERS_FILE, users);

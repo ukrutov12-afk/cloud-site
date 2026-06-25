@@ -115,6 +115,9 @@
     "pass_changed": "Password changed.",
     "hwid_reset": "HWID reset.",
     "soon": "This feature is coming soon.",
+    "btn_avatar": "Change avatar",
+    "avatar_ok": "Avatar updated.",
+    "avatar_err": "Could not upload avatar (image up to 6 MB required).",
     "no_plan": "No active subscription"
   },
   "support": {
