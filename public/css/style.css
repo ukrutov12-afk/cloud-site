@@ -198,20 +198,26 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 /* плавающие скрины софта ПО БОКАМ (в полях, выглядывают с краёв), не за карточками */
 /* большие ФОНОВЫЕ скрины — прижаты к ЛЕВОМУ и ПРАВОМУ краю экрана (не пересекаются),
    полное качество (png), мягкое размытие + затухание к краям */
-.side-shot{position:absolute;top:50%;width:38vw;height:560px;
+.side-shot{position:absolute;top:60%;width:38vw;height:560px;
   background-size:cover;background-position:center;opacity:.24;z-index:-1;pointer-events:none;
-  transform:translateY(-50%);filter:blur(1.2px)}
-/* левый край экрана: left = -(отступ центрирования секции) */
+  transform:translateY(-50%);filter:blur(0.5px)}
+/* левый край экрана: left = -(отступ центрирования секции). Края сильно тают. */
 .side-shot.left{left:calc((1160px - 100vw) / 2);
-  -webkit-mask-image:linear-gradient(to right, #000 0%, #000 46%, transparent 92%), linear-gradient(to bottom, transparent, #000 15%, #000 85%, transparent);
+  -webkit-mask-image:linear-gradient(to right, transparent 2%, #000 18%, #000 40%, transparent 80%), linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
   -webkit-mask-composite:source-in;
-  mask-image:linear-gradient(to right, #000 0%, #000 46%, transparent 92%), linear-gradient(to bottom, transparent, #000 15%, #000 85%, transparent);
+  mask-image:linear-gradient(to right, transparent 2%, #000 18%, #000 40%, transparent 80%), linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
   mask-composite:intersect}
 /* правый край экрана */
 .side-shot.right{right:calc((1160px - 100vw) / 2);
-  -webkit-mask-image:linear-gradient(to left, #000 0%, #000 46%, transparent 92%), linear-gradient(to bottom, transparent, #000 15%, #000 85%, transparent);
+  -webkit-mask-image:linear-gradient(to left, transparent 2%, #000 18%, #000 40%, transparent 80%), linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
   -webkit-mask-composite:source-in;
-  mask-image:linear-gradient(to left, #000 0%, #000 46%, transparent 92%), linear-gradient(to bottom, transparent, #000 15%, #000 85%, transparent);
+  mask-image:linear-gradient(to left, transparent 2%, #000 18%, #000 40%, transparent 80%), linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
+  mask-composite:intersect}
+/* ЦЕНТРАЛЬНЫЙ скрин — в зазоре между боковыми (≤24vw, не залезает), тает по всем краям */
+.side-shot.center{left:50%;width:22vw;height:620px;transform:translate(-50%,-50%);
+  -webkit-mask-image:linear-gradient(to right, transparent, #000 26%, #000 74%, transparent), linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
+  -webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to right, transparent, #000 26%, #000 74%, transparent), linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
   mask-composite:intersect}
 @media (max-width:1159px){.side-shot{display:none}}
 
