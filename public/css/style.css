@@ -196,21 +196,21 @@ body::after{content:"";position:fixed;inset:0;z-index:-3;
 /* ===== features ===== */
 .features{position:relative}
 /* плавающие скрины софта ПО БОКАМ (в полях, выглядывают с краёв), не за карточками */
-/* крупные ФОНОВЫЕ скрины по бокам (за контентом), БЕЗ поворота, тают к краям */
-.side-shot{position:absolute;top:50%;width:620px;height:380px;border-radius:18px;
-  background-size:cover;background-position:center;opacity:.28;z-index:-1;pointer-events:none;
+/* большие ФОНОВЫЕ скрины — на весь фон (за контентом), тают к центру и по краям */
+.side-shot{position:absolute;top:50%;width:62vw;height:760px;
+  background-size:cover;background-position:center;opacity:.2;z-index:-1;pointer-events:none;
   transform:translateY(-50%)}
-.side-shot.left{left:-300px;
-  -webkit-mask-image:linear-gradient(to right, transparent 4%, #000 55%), linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+.side-shot.left{left:-320px;
+  -webkit-mask-image:linear-gradient(to right, #000 0%, #000 42%, transparent 88%), linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
   -webkit-mask-composite:source-in;
-  mask-image:linear-gradient(to right, transparent 4%, #000 55%), linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+  mask-image:linear-gradient(to right, #000 0%, #000 42%, transparent 88%), linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
   mask-composite:intersect}
-.side-shot.right{right:-300px;
-  -webkit-mask-image:linear-gradient(to left, transparent 4%, #000 55%), linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+.side-shot.right{right:-320px;
+  -webkit-mask-image:linear-gradient(to left, #000 0%, #000 42%, transparent 88%), linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
   -webkit-mask-composite:source-in;
-  mask-image:linear-gradient(to left, transparent 4%, #000 55%), linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+  mask-image:linear-gradient(to left, #000 0%, #000 42%, transparent 88%), linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
   mask-composite:intersect}
-@media (max-width:1024px){.side-shot{display:none}}
+@media (max-width:900px){.side-shot{display:none}}
 
 .feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
 .feature-card{background:rgba(15,20,32,.20);border:1px solid var(--stroke);border-radius:var(--radius);padding:24px;
