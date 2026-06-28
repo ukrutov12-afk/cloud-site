@@ -21,6 +21,21 @@ const IS_PROD = process.env.NODE_ENV === 'production';
 const BUILD = new Date().toISOString().slice(0, 16).replace('T', ' '); // метка сборки (момент старта)
 app.set('trust proxy', 1); // за nginx/Caddy — корректные secure-cookie и протокол
 
+// ─────────────── Заморозка покупок ───────────────
+// Пока true — покупки/триал недоступны (только предзаказ), и выданные дни НЕ тратятся.
+const FROZEN = (process.env.PURCHASES_FROZEN || 'true') === 'true';
+const FROZEN_AT = new Date(process.env.FROZEN_AT || '2026-06-26T00:00:00Z'); // момент заморозки
+function effectiveNow() { return FROZEN ? new Date(FROZEN_AT) : new Date(); }
+
+// Контакты для предзаказа/поддержки
+const CONTACTS = {
+  discordUser: 'maboycrime',
+  telegram: 'https://t.me/maboycrime',
+  telegramName: '@maboycrime',
+  support: 'https://t.me/CloudClientSupport_bot',
+  supportName: '@CloudClientSupport_bot'
+};
+
 // ─────────────────────────── i18n ───────────────────────────
 const LANGS = ['be', 'ru', 'uk', 'en'];
 const DEFAULT_LANG = 'ru';
@@ -69,7 +84,7 @@ async function applySub(userId, planLabel, days) {
   if (days === null) {
     await db.updateUser(userId, { plan: planLabel, subPlan: planLabel, subForever: true, subUntil: null });
   } else {
-    const now = new Date();
+    const now = effectiveNow();
     const base = (user.subUntil && !user.subForever && new Date(user.subUntil) > now) ? new Date(user.subUntil) : now;
     const until = new Date(base.getTime() + days * 86400000);
     await db.updateUser(userId, { plan: planLabel, subPlan: planLabel, subForever: false, subUntil: until.toISOString() });
@@ -131,6 +146,8 @@ app.use(async (req, res, next) => {
 
     res.locals.lang = lang;
     res.locals.build = BUILD;
+    res.locals.frozen = FROZEN;
+    res.locals.contacts = CONTACTS;
     res.locals.siteUrl = SITE_URL;
     res.locals.langs = LANGS.map(code => ({ code, name: locales[code].lang_name }));
     res.locals.t = (k) => t(lang, k);
@@ -183,6 +200,7 @@ app.get('/buy', async (req, res, next) => {
 
 app.post('/buy', requireAuth, async (req, res, next) => {
   try {
+    if (FROZEN) { flash(req, 'error', 'buy.frozen_flash'); return res.redirect('/buy'); }
     let plan = PLANS[req.body.plan] || PLANS.lifetime;
     // чекбокс беты применим только к «навсегда»
     if (plan.id === 'lifetime' && (req.body.beta === 'on' || req.body.beta === '1')) {
@@ -198,6 +216,7 @@ app.post('/buy', requireAuth, async (req, res, next) => {
 // Пробный период — один раз на аккаунт
 app.post('/buy/trial', requireAuth, async (req, res, next) => {
   try {
+    if (FROZEN) { flash(req, 'error', 'buy.frozen_flash'); return res.redirect('/buy'); }
     const orders = await db.getOrdersByUser(req.session.userId);
     if (orders.some(o => String(o.plan).startsWith('trial'))) {
       flash(req, 'error', 'buy.trial_used');
@@ -288,10 +307,11 @@ function subView(user, admin) {
   if (admin) return { active: true, forever: true, plan: 'lifetime' };
   if (user.subForever) return { active: true, forever: true, plan: user.subPlan || 'lifetime' };
   if (user.subUntil) {
-    const until = new Date(user.subUntil), now = new Date();
+    const until = new Date(user.subUntil), now = effectiveNow();
     return {
       active: until > now, forever: false, plan: user.subPlan,
-      until: user.subUntil, daysLeft: Math.max(0, Math.ceil((until - now) / 86400000))
+      until: user.subUntil, daysLeft: Math.max(0, Math.ceil((until - now) / 86400000)),
+      frozen: FROZEN
     };
   }
   return null;
@@ -400,11 +420,19 @@ app.post('/admin/grant', requireAdmin, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// пометить заказ оплаченным / в ожидании
+// заказ: оплачен / в ожидании / удалить
 app.post('/admin/order/:id/:status', requireAdmin, async (req, res, next) => {
   try {
-    const st = req.params.status === 'paid' ? 'paid' : 'pending';
-    await db.setOrderStatus(req.params.id, st);
+    if (req.params.status === 'delete') { await db.deleteOrder(req.params.id); }
+    else { await db.setOrderStatus(req.params.id, req.params.status === 'paid' ? 'paid' : 'pending'); }
+    res.redirect('/admin');
+  } catch (e) { next(e); }
+});
+
+// удалить (сбросить) подписку пользователя
+app.post('/admin/sub/:userId/delete', requireAdmin, async (req, res, next) => {
+  try {
+    await db.updateUser(req.params.userId, { plan: null, subPlan: null, subUntil: null, subForever: false });
     res.redirect('/admin');
   } catch (e) { next(e); }
 });

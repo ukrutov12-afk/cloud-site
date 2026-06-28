@@ -33,7 +33,7 @@
     <h3 class="panel-h">Пользователи (<%= users.length %> последних)</h3>
     <div class="tbl-wrap">
       <table class="admin-tbl">
-        <thead><tr><th>Username</th><th>Email</th><th>Подписка</th><th>Роль</th><th>Выдать дней (404 = ∞)</th></tr></thead>
+        <thead><tr><th>Username</th><th>Email</th><th>Регистрация</th><th>Подписка</th><th>Роль</th><th>Выдать / удалить</th></tr></thead>
         <tbody>
           <% users.forEach(function(u){ %>
             <%
@@ -45,18 +45,24 @@
             <tr>
               <td><span class="u-cell"><span class="u-av"><% if (u.avatar) { %><img src="<%= u.avatar %>" alt=""><% } else { %><%= (u.username||'C').charAt(0).toUpperCase() %><% } %></span><%= u.username %></span></td>
               <td class="muted"><%= u.email %></td>
+              <td class="muted small"><%= new Date(u.createdAt).toLocaleString() %></td>
               <td><%= subTxt %></td>
               <td><% if (isAdminFn(u)) { %><span class="admin-badge">ADMIN</span><% } else { %><span class="muted small">user</span><% } %></td>
               <td>
-                <form action="/admin/grant" method="post" class="grant-form">
-                  <input type="hidden" name="userId" value="<%= u.id %>">
-                  <input type="number" name="days" min="1" value="30" class="grant-days" title="дней (404 = навсегда)">
-                  <button type="submit" class="btn-mini">Выдать</button>
-                </form>
+                <div class="grant-form">
+                  <form action="/admin/grant" method="post" class="grant-form" style="margin:0">
+                    <input type="hidden" name="userId" value="<%= u.id %>">
+                    <input type="number" name="days" min="1" value="30" class="grant-days" title="дней (404 = навсегда)">
+                    <button type="submit" class="btn-mini">Выдать</button>
+                  </form>
+                  <form action="/admin/sub/<%= u.id %>/delete" method="post" style="margin:0" onsubmit="return confirm('Удалить подписку у <%= u.username %>?')">
+                    <button type="submit" class="btn-mini danger" title="удалить подписку">✕ подписку</button>
+                  </form>
+                </div>
               </td>
             </tr>
           <% }); %>
-          <% if (!users.length) { %><tr><td colspan="5" class="muted">Пусто</td></tr><% } %>
+          <% if (!users.length) { %><tr><td colspan="6" class="muted">Пусто</td></tr><% } %>
         </tbody>
       </table>
     </div>
@@ -78,11 +84,14 @@
               <td><span class="status status-<%= o.status %>"><%= o.status %></span></td>
               <td class="muted small"><%= new Date(o.createdAt).toLocaleString() %></td>
               <td>
-                <% if (o.status !== 'paid') { %>
-                  <form action="/admin/order/<%= o.id %>/paid" method="post"><button class="btn-mini">✓ оплачен</button></form>
-                <% } else { %>
-                  <form action="/admin/order/<%= o.id %>/pending" method="post"><button class="btn-mini ghost">↺ сброс</button></form>
-                <% } %>
+                <div class="grant-form">
+                  <% if (o.status !== 'paid') { %>
+                    <form action="/admin/order/<%= o.id %>/paid" method="post" style="margin:0"><button class="btn-mini">✓ оплачен</button></form>
+                  <% } else { %>
+                    <form action="/admin/order/<%= o.id %>/pending" method="post" style="margin:0"><button class="btn-mini ghost">↺ сброс</button></form>
+                  <% } %>
+                  <form action="/admin/order/<%= o.id %>/delete" method="post" style="margin:0" onsubmit="return confirm('Удалить заказ?')"><button class="btn-mini danger">✕</button></form>
+                </div>
               </td>
             </tr>
           <% }); %>

@@ -62,7 +62,14 @@
     "trial_btn": "Try for",
     "trial_used": "The trial period has already been used on this account.",
     "beta_addon": "Add beta test access (+200 ₽)",
-    "plans_heading": "Full access"
+    "plans_heading": "Full access",
+    "frozen_title": "Purchases are temporarily frozen",
+    "frozen_desc": "You can place a pre-order now — message us and we'll lock in your plan and grant access as soon as sales reopen. Granted days are not being spent meanwhile.",
+    "preorder": "Place a pre-order",
+    "frozen_flash": "Purchases are temporarily frozen — place a pre-order.",
+    "via": "Message:",
+    "copy": "Copy",
+    "copied": "Copied"
   },
   "auth": {
     "login_title": "Log in to your account",

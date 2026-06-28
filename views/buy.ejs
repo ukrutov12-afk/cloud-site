@@ -3,6 +3,25 @@
 <section class="section narrow">
   <h2 class="section-title"><%= t('buy.title') %></h2>
 
+  <% if (frozen) { %>
+    <div class="frozen-banner" id="frozen">
+      <div class="fb-badge">❄</div>
+      <div class="fb-body">
+        <div class="fb-title"><%= t('buy.frozen_title') %></div>
+        <p class="fb-desc"><%= t('buy.frozen_desc') %></p>
+        <div class="fb-actions">
+          <span class="fb-via"><%= t('buy.via') %></span>
+          <button type="button" class="fb-btn" id="dcCopy" data-copy="<%= contacts.discordUser %>">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 4.4A19 19 0 0 0 15.3 3l-.3.5a14 14 0 0 1 4 .9c-1.8-.9-3.6-1.3-5.4-1.4h-.6c-1.8.1-3.6.5-5.4 1.4a14 14 0 0 1 4-.9L11.3 3A19 19 0 0 0 6.6 4.4 19 19 0 0 0 3 17.5a14 14 0 0 0 4.3 2.2l.9-1.5c-.7-.3-1.4-.6-2-1l.5-.4a10 10 0 0 0 8.6 0l.5.4c-.6.4-1.3.7-2 1l.9 1.5a14 14 0 0 0 4.3-2.2A19 19 0 0 0 20 4.4ZM9.5 14.3c-.8 0-1.5-.8-1.5-1.7s.7-1.7 1.5-1.7 1.5.8 1.5 1.7-.7 1.7-1.5 1.7Zm5 0c-.8 0-1.5-.8-1.5-1.7s.7-1.7 1.5-1.7 1.5.8 1.5 1.7-.7 1.7-1.5 1.7Z"/></svg>
+            Discord: <%= contacts.discordUser %>
+          </button>
+          <a class="fb-btn" href="<%= contacts.telegram %>" target="_blank" rel="noopener">✈ Telegram <%= contacts.telegramName %></a>
+          <a class="fb-btn" href="<%= contacts.support %>" target="_blank" rel="noopener">🤖 <%= contacts.supportName %></a>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
   <!-- ───── Пробный период ───── -->
   <div class="panel trial-panel">
     <h3 class="panel-h"><%= t('buy.trial_title') %></h3>
@@ -18,7 +37,9 @@
         </div>
         <input type="range" min="1" max="7" value="3" name="days" id="trialRange" class="trial-range">
         <div class="trial-scale"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
-        <% if (!user) { %>
+        <% if (frozen) { %>
+          <a href="#frozen" class="btn btn-primary btn-block" style="margin-top:16px"><%= t('buy.preorder') %></a>
+        <% } else if (!user) { %>
           <a href="/login" class="btn btn-ghost btn-block" style="margin-top:16px"><%= t('buy.need_login') %></a>
         <% } else { %>
           <button type="submit" class="btn btn-primary btn-block" style="margin-top:16px">
@@ -51,7 +72,9 @@
           <span><%= t('buy.beta_addon') %></span>
         </label>
 
-        <% if (!user) { %>
+        <% if (frozen) { %>
+          <a href="#frozen" class="btn btn-primary btn-lg btn-block" style="margin-top:18px"><%= t('buy.preorder') %></a>
+        <% } else if (!user) { %>
           <div class="notice" style="margin-top:18px"><%= t('buy.need_login') %></div>
           <div class="row-gap">
             <a href="/login" class="btn btn-primary"><%= t('nav.login') %></a>
@@ -74,6 +97,17 @@
 </section>
 
 <script>
+  // ── копирование Discord-ника ──
+  var dc = document.getElementById('dcCopy');
+  if (dc) dc.addEventListener('click', function(){
+    var u = dc.getAttribute('data-copy');
+    navigator.clipboard.writeText(u).then(function(){
+      var old = dc.innerHTML;
+      dc.innerHTML = '<%= t("buy.copied") %> ✓';
+      setTimeout(function(){ dc.innerHTML = old; }, 1500);
+    }).catch(function(){});
+  });
+
   // ── триал-ползунок ──
   var TRIAL = <%- JSON.stringify(trialPrices) %>;
   var range = document.getElementById('trialRange');

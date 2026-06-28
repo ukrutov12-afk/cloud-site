@@ -124,6 +124,9 @@ const pgApi = {
   },
   async setOrderStatus(orderId, status) {
     await pg.query('UPDATE orders SET status=$1 WHERE id=$2', [status, orderId]);
+  },
+  async deleteOrder(orderId) {
+    await pg.query('DELETE FROM orders WHERE id=$1', [orderId]);
   }
 };
 
@@ -187,6 +190,9 @@ const fileApi = {
     const orders = readJSON(ORDERS_FILE);
     const i = orders.findIndex(o => o.id === orderId);
     if (i !== -1) { orders[i].status = status; writeJSON(ORDERS_FILE, orders); }
+  },
+  async deleteOrder(orderId) {
+    writeJSON(ORDERS_FILE, readJSON(ORDERS_FILE).filter(o => o.id !== orderId));
   }
 };
 
