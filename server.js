@@ -1,5 +1,5 @@
 /**
- * Cloud Client — сайт покупки.
+ * Zephyr Client — сайт покупки.
  * Express + EJS + сессии + bcrypt. i18n: be / ru / uk / en.
  * Запуск:  npm install  &&  npm start   →  http://localhost:3000
  */
@@ -16,10 +16,21 @@ const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
-const SITE_URL = process.env.SITE_URL || 'http://cloudlegit.work.gd';
+const SITE_URL = process.env.SITE_URL || `http://localhost:${PORT}`;
 const IS_PROD = process.env.NODE_ENV === 'production';
+const SESSION_SECRET = process.env.SESSION_SECRET || (!IS_PROD ? 'zephyr-local-development-secret' : '');
 const BUILD = new Date().toISOString().slice(0, 16).replace('T', ' '); // метка сборки (момент старта)
 app.set('trust proxy', 1); // за nginx/Caddy — корректные secure-cookie и протокол
+app.disable('x-powered-by');
+
+if (!SESSION_SECRET) {
+  throw new Error('SESSION_SECRET is required when NODE_ENV=production');
+}
+
+function safeMemoryUsage() {
+  try { return process.memoryUsage(); }
+  catch (_) { return { rss: 0, heapUsed: 0 }; }
+}
 
 // ─────────────── Заморозка покупок ───────────────
 // Пока true — покупки/триал недоступны (только предзаказ), и выданные дни НЕ тратятся.
@@ -29,11 +40,12 @@ function effectiveNow() { return FROZEN ? new Date(FROZEN_AT) : new Date(); }
 
 // Контакты для предзаказа/поддержки
 const CONTACTS = {
-  discordUser: 'maboycrime',
-  telegram: 'https://t.me/maboycrime',
-  telegramName: '@maboycrime',
-  support: 'https://t.me/CloudClientSupport_bot',
-  supportName: '@CloudClientSupport_bot'
+  discordUser: process.env.DISCORD_USER || 'maboycrime',
+  telegram: process.env.TELEGRAM_URL || 'https://t.me/maboycrime',
+  telegramName: process.env.TELEGRAM_NAME || '@maboycrime',
+  support: process.env.SUPPORT_URL || 'https://t.me/maboycrime',
+  supportName: process.env.SUPPORT_NAME || '@maboycrime',
+  email: process.env.SUPPORT_EMAIL || ''
 };
 
 // ─────────────────────────── i18n ───────────────────────────
@@ -56,10 +68,10 @@ function t(lang, keyPath) {
 
 // ─────────────────────────── Тарифы (₽) ───────────────────────────
 const PLANS = {
-  month:         { id: 'month',         price: 129, currency: 'RUB', months: 1 },
-  season:        { id: 'season',        price: 349, currency: 'RUB', months: 3, popular: true },
-  lifetime:      { id: 'lifetime',      price: 799, currency: 'RUB', months: 0 },
-  lifetime_beta: { id: 'lifetime_beta', price: 999, currency: 'RUB', months: 0, beta: true }
+  month:         { id: 'month',         price: 299, currency: 'RUB', months: 1 },
+  season:        { id: 'season',        price: 699, currency: 'RUB', months: 3, popular: true },
+  lifetime:      { id: 'lifetime',      price: 1999, currency: 'RUB', months: 0 },
+  lifetime_beta: { id: 'lifetime_beta', price: 2199, currency: 'RUB', months: 0, beta: true }
 };
 // Пробный период — цена за N дней (1..7). Один раз на аккаунт.
 const TRIAL_PRICES = { 1: 39, 2: 42, 3: 45, 4: 49, 5: 52, 6: 55, 7: 59 };
@@ -124,7 +136,7 @@ if (process.env.DATABASE_URL) {
 }
 app.use(session({
   store: sessionStore,
-  secret: process.env.SESSION_SECRET || 'cloud-client-secret-change-me',
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -184,6 +196,7 @@ const isEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || ''));
 
 // ─────────────────────────── Маршруты ───────────────────────────
 app.get('/', (req, res) => res.render('index', { page: 'home' }));
+app.get('/healthz', (req, res) => res.status(200).json({ ok: true, service: 'zephyr-client' }));
 
 app.get('/buy', async (req, res, next) => {
   try {
@@ -380,7 +393,7 @@ app.get('/admin', requireAdmin, async (req, res, next) => {
     const orders = await db.getAllOrders();
     const paid = orders.filter(o => o.status === 'paid');
     const revenue = paid.reduce((s, o) => s + Number(o.price || 0), 0);
-    const mem = process.memoryUsage();
+    const mem = safeMemoryUsage();
     const stats = {
       users: users.length,
       orders: orders.length,
@@ -443,7 +456,7 @@ app.get('/admin/stats.json', requireAdmin, async (req, res, next) => {
     const users = await db.getAllUsers();
     const orders = await db.getAllOrders();
     const paid = orders.filter(o => o.status === 'paid');
-    const mem = process.memoryUsage();
+    const mem = safeMemoryUsage();
     res.json({
       users: users.length, orders: orders.length, paid: paid.length,
       pending: orders.length - paid.length,
@@ -467,7 +480,7 @@ app.use((err, req, res, next) => {
 
 db.init().then(() => {
   app.listen(PORT, HOST, () => {
-    console.log(`\n  Cloud site listening on ${HOST}:${PORT}`);
+    console.log(`\n  Zephyr site listening on ${HOST}:${PORT}`);
     console.log(`  Public: ${SITE_URL}\n`);
   });
 }).catch((e) => {

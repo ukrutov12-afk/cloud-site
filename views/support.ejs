@@ -1,35 +1,31 @@
-<%- include('partials/header', { pageTitle: 'Cloud — ' + t('support.title') }) %>
+<%- include('partials/header', { pageTitle: 'Zephyr — ' + t('support.title') }) %>
 
-<section class="section narrow">
-  <h2 class="section-title"><%= t('support.title') %></h2>
-  <p class="section-sub"><%= t('support.subtitle') %></p>
+<section class="inner-hero section-shell">
+  <div class="section-kicker"><span>04</span><%= t('support.title') %></div>
+  <h1><%= t('support.title') %>.</h1>
+  <p><%= t('support.subtitle') %></p>
+</section>
 
-  <div class="support-grid">
-    <div class="panel">
-      <h3 class="panel-h"><%= t('support.faq') %></h3>
-      <% [1,2,3,4].forEach(function(i){ %>
-        <details class="faq">
-          <summary><%= t('support.q' + i) %></summary>
-          <p><%= t('support.a' + i) %></p>
-        </details>
+<section class="support-layout section-shell">
+  <div class="panel-card">
+    <span class="panel-label"><%= t('support.faq') %></span>
+    <div class="support-faq-list">
+      <% [1,2,3,4].forEach(function(i){ var open=i===1; %>
+        <div class="faq-item <%= open ? 'is-open' : '' %>
+          <button class="faq-question" type="button" aria-expanded="<%= open ? 'true' : 'false' %>"><span>0<%= i %></span><b><%= t('support.q' + i) %></b><i aria-hidden="true"></i></button>
+          <div class="faq-answer" aria-hidden="<%= open ? 'false' : 'true' %>"><div><p><%= t('support.a' + i) %></p></div></div>
+        </div>
       <% }); %>
     </div>
-
-    <div class="panel">
-      <h3 class="panel-h"><%= t('support.contact_title') %></h3>
-      <% if (sent) { %><div class="notice success"><%= t('support.sent') %></div><% } %>
-      <form action="/support" method="post" class="form">
-        <label class="field"><span><%= t('support.name') %></span><input type="text" name="name" required></label>
-        <label class="field"><span><%= t('support.email_us') %></span><input type="email" name="email" required></label>
-        <label class="field"><span><%= t('support.message') %></span><textarea name="message" rows="4" required></textarea></label>
-        <button type="submit" class="btn btn-primary btn-block"><%= t('support.send') %></button>
-      </form>
-      <div class="contact-links">
-        <a href="https://discord.gg/" class="contact-link">💬 <%= t('support.discord') %></a>
-        <a href="mailto:support@cloud-client.app" class="contact-link">✉️ support@cloud-client.app</a>
-      </div>
-    </div>
   </div>
+
+  <aside class="panel-card contact-card">
+    <span class="panel-label"><%= t('support.contact_title') %></span>
+    <h2><%= t('support.subtitle') %></h2>
+    <a href="<%= contacts.support %>" target="_blank" rel="noopener" class="contact-action"><span>Telegram</span><b><%= contacts.supportName %></b><i>↗</i></a>
+    <button type="button" class="contact-action copy-contact" data-copy="<%= contacts.discordUser %>"><span>Discord</span><b><%= contacts.discordUser %></b><i>＋</i></button>
+    <% if (contacts.email) { %><a href="mailto:<%= contacts.email %>" class="contact-action"><span>Email</span><b><%= contacts.email %></b><i>↗</i></a><% } %>
+  </aside>
 </section>
 
 <%- include('partials/footer') %>

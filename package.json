@@ -1,7 +1,7 @@
 {
-  "name": "cloud-client-site",
-  "version": "1.0.0",
-  "description": "Cloud Client — purchase site with auth, i18n (be/ru/en/uk), docs & support",
+  "name": "zephyr-client-site",
+  "version": "2.0.0",
+  "description": "Zephyr Client site with PostgreSQL auth, i18n, account and admin panel",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

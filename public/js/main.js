@@ -1,54 +1,109 @@
-// мобильное меню
-document.querySelector('.burger')?.addEventListener('click', () => {
-  document.querySelector('.nav-mobile')?.classList.toggle('open');
-});
+(() => {
+  const mobileToggle = document.querySelector('.mobile-toggle');
+  const mobileNav = document.querySelector('.mobile-nav');
 
-// выбор языка по клику (для тач-устройств, hover уже работает на десктопе)
-const lang = document.querySelector('.lang');
-const langBtn = document.querySelector('.lang-btn');
-langBtn?.addEventListener('click', (e) => {
-  e.stopPropagation();
-  lang.classList.toggle('open');
-  const menu = lang.querySelector('.lang-menu');
-  if (menu) {
-    const open = lang.classList.contains('open');
-    menu.style.opacity = open ? '1' : '';
-    menu.style.visibility = open ? 'visible' : '';
-    menu.style.transform = open ? 'translateY(0)' : '';
+  function closeMobileNav() {
+    if (!mobileToggle || !mobileNav) return;
+    mobileToggle.setAttribute('aria-expanded', 'false');
+    mobileNav.classList.remove('open');
   }
-});
-document.addEventListener('click', () => {
-  if (!lang) return;
-  lang.classList.remove('open');
-  const menu = lang.querySelector('.lang-menu');
-  if (menu) { menu.style.opacity = ''; menu.style.visibility = ''; menu.style.transform = ''; }
-});
 
-// ── reveal-on-scroll: плавное появление блоков ──
-(function(){
-  var sel = '.feature-card, .panel, .cta-band, .price-card, .stat-card, .hero-stats > div, .data-row, .faq, .plan-opt';
-  var els = Array.prototype.slice.call(document.querySelectorAll(sel));
-  if (!('IntersectionObserver' in window) || !els.length) return;
-  // стаггер внутри каждого родителя
-  var seen = new Map();
-  els.forEach(function(el){
-    el.classList.add('anim-init');
-    var p = el.parentElement || document.body;
-    var n = seen.get(p) || 0; seen.set(p, n + 1);
-    el.style.transitionDelay = Math.min(n, 7) * 55 + 'ms';
+  mobileToggle?.addEventListener('click', () => {
+    const nextOpen = mobileToggle.getAttribute('aria-expanded') !== 'true';
+    mobileToggle.setAttribute('aria-expanded', String(nextOpen));
+    mobileNav?.classList.toggle('open', nextOpen);
   });
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if (e.isIntersecting){ e.target.classList.add('anim-in'); io.unobserve(e.target); }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-  els.forEach(function(el){ io.observe(el); });
-})();
+  mobileNav?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMobileNav));
 
-// флеш — мягко скрыть через 4с
-const flash = document.querySelector('.flash');
-if (flash) setTimeout(() => {
-  flash.style.transition = 'opacity .5s, transform .5s';
-  flash.style.opacity = '0';
-  flash.style.transform = 'translateY(-8px)';
-}, 4000);
+  const lang = document.querySelector('.lang');
+  const langButton = lang?.querySelector('.lang-btn');
+  langButton?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const nextOpen = !lang.classList.contains('open');
+    lang.classList.toggle('open', nextOpen);
+    langButton.setAttribute('aria-expanded', String(nextOpen));
+  });
+  document.addEventListener('click', () => {
+    lang?.classList.remove('open');
+    langButton?.setAttribute('aria-expanded', 'false');
+  });
+
+  document.querySelectorAll('.faq-list, .support-faq-list').forEach((list, listIndex) => {
+    const items = Array.from(list.querySelectorAll('.faq-item'));
+    items.forEach((item, itemIndex) => {
+      const button = item.querySelector('.faq-question');
+      const answer = item.querySelector('.faq-answer');
+      if (!button || !answer) return;
+
+      const triggerId = `faq-${listIndex}-${itemIndex}-trigger`;
+      const panelId = `faq-${listIndex}-${itemIndex}-panel`;
+      button.id = triggerId;
+      button.setAttribute('aria-controls', panelId);
+      answer.id = panelId;
+      answer.setAttribute('role', 'region');
+      answer.setAttribute('aria-labelledby', triggerId);
+
+      button.addEventListener('click', () => {
+        const shouldOpen = !item.classList.contains('is-open');
+        items.forEach((other) => {
+          other.classList.remove('is-open');
+          other.querySelector('.faq-question')?.setAttribute('aria-expanded', 'false');
+          other.querySelector('.faq-answer')?.setAttribute('aria-hidden', 'true');
+        });
+        if (shouldOpen) {
+          item.classList.add('is-open');
+          button.setAttribute('aria-expanded', 'true');
+          answer.setAttribute('aria-hidden', 'false');
+        }
+      });
+    });
+  });
+
+  const revealItems = document.querySelectorAll('.reveal-on-scroll');
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -30px' });
+    revealItems.forEach((item, index) => {
+      item.style.transitionDelay = `${Math.min(index % 4, 3) * 70}ms`;
+      observer.observe(item);
+    });
+  } else {
+    revealItems.forEach((item) => item.classList.add('is-visible'));
+  }
+
+  document.querySelectorAll('[data-loading-form]').forEach((form) => {
+    form.addEventListener('submit', () => {
+      const button = form.querySelector('button[type="submit"]');
+      if (!button) return;
+      button.classList.add('is-loading');
+      button.disabled = true;
+      button.textContent = 'Zephyr ···';
+    });
+  });
+
+  document.querySelectorAll('.copy-contact').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const value = button.getAttribute('data-copy') || '';
+      try {
+        await navigator.clipboard.writeText(value);
+        const label = button.querySelector('b');
+        if (!label) return;
+        const previous = label.textContent;
+        label.textContent = 'Copied';
+        window.setTimeout(() => { label.textContent = previous; }, 1400);
+      } catch (_) {}
+    });
+  });
+
+  const flash = document.querySelector('.flash');
+  if (flash) window.setTimeout(() => {
+    flash.style.transition = 'opacity .45s ease, transform .45s ease';
+    flash.style.opacity = '0';
+    flash.style.transform = 'translate(-50%, -8px)';
+  }, 4200);
+})();

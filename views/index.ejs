@@ -1,71 +1,121 @@
-<%- include('partials/header', { pageTitle: 'Cloud Client — ' + t('nav.home') }) %>
+<%- include('partials/header', { pageTitle: 'Zephyr Client — ' + t('nav.home') }) %>
 
-<div class="hero-bg"></div>
+<section class="hero section-shell" id="top">
+  <div class="aurora aurora-one" aria-hidden="true"></div>
+  <div class="aurora aurora-two" aria-hidden="true"></div>
+  <div class="star-field" aria-hidden="true"></div>
 
-<section class="hero">
-  <div class="hero-content">
-    <span class="badge"><%= t('hero.badge') %></span>
-    <h1 class="hero-title"><%= t('hero.title') %></h1>
-    <p class="hero-sub"><%= t('hero.subtitle') %></p>
-    <div class="hero-cta">
-      <a href="/buy" class="btn btn-primary btn-lg"><%= t('hero.cta_buy') %></a>
-      <a href="/docs/terms" class="btn btn-ghost btn-lg"><%= t('hero.cta_docs') %></a>
+  <div class="hero-grid">
+    <div class="hero-copy">
+      <div class="eyebrow reveal reveal-one"><span class="live-dot" aria-hidden="true"></span><%= t('hero.badge') %></div>
+      <h1 class="reveal reveal-two">Zephyr.<span><%= t('hero.title').replace(/^Zephyr\s*[—-]?\s*/i, '') %></span></h1>
+      <p class="hero-lede reveal reveal-three"><%= t('hero.subtitle') %></p>
+
+      <div class="hero-actions reveal reveal-four">
+        <a class="button button-primary magnetic" href="/buy"><%= t('hero.cta_buy') %><span aria-hidden="true">→</span></a>
+        <a class="button button-secondary" href="<%= user ? '/account' : '/login' %>"><%= user ? t('nav.account') : t('nav.login') %><span aria-hidden="true">◇</span></a>
+      </div>
+
+      <div class="proof-strip reveal reveal-five">
+        <div><strong>1.21.4</strong><span>Fabric</span></div>
+        <div><strong>4</strong><span>be · ru · uk · en</span></div>
+        <div><strong>24 / 7</strong><span><%= t('nav.support') %></span></div>
+      </div>
     </div>
-    <div class="hero-stats">
-      <div><strong class="stat-word"><%= t('hero.stat_bypass') %></strong><span><%= t('hero.stat_users') %></span></div>
-      <div><strong>99.9%</strong><span><%= t('hero.stat_uptime') %></span></div>
-      <div><strong>40+</strong><span><%= t('hero.stat_modules') %></span></div>
+
+    <div class="hero-art reveal reveal-three" aria-label="Zephyr Client">
+      <div class="orbit orbit-one" aria-hidden="true"></div><div class="orbit orbit-two" aria-hidden="true"></div>
+      <span class="shard shard-one" aria-hidden="true"></span><span class="shard shard-two" aria-hidden="true"></span>
+      <span class="shard shard-three" aria-hidden="true"></span><span class="shard shard-four" aria-hidden="true"></span>
+      <div class="hero-logo-card">
+        <div class="logo-halo" aria-hidden="true"></div>
+        <img src="/img/zephyr-avatar.jpg" alt="Zephyr crystal logo">
+        <div class="logo-card-caption"><span><i aria-hidden="true"></i>System online</span><b>Zephyr / 1.21.4</b></div>
+      </div>
+      <div class="floating-card floating-card-one"><span class="mini-icon">◇</span><span><small>Performance</small><strong>FPS friendly</strong></span></div>
+      <div class="floating-card floating-card-two"><span class="mini-icon">⌁</span><span><small>Profiles</small><strong>Built around you</strong></span></div>
     </div>
   </div>
-  <div class="hero-glass">
-    <div class="glass-card">
-      <div class="glass-head">
-        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        <em>Cloud — Combat</em>
-      </div>
-      <div class="glass-rows">
-        <div class="grow"><span>Attack Aura</span><i class="sw on"></i></div>
-        <div class="grow"><span>Triggerbot</span><i class="sw"></i></div>
-        <div class="grow"><span>Player ESP</span><i class="sw on"></i></div>
-        <div class="grow"><span>Auto Totem</span><i class="sw on"></i></div>
-        <div class="grow"><span>Fullbright</span><i class="sw"></i></div>
-      </div>
-    </div>
+  <a class="scroll-hint" href="#features" aria-label="Scroll"><span>SCROLL TO EXPLORE</span><i aria-hidden="true"></i></a>
+</section>
+
+<section class="ticker" aria-label="Zephyr highlights">
+  <div class="ticker-track">
+    <% ['SMOOTH','FLEXIBLE','FAST','PROFILES','UPDATES','SUPPORT','SMOOTH','FLEXIBLE','FAST','PROFILES','UPDATES','SUPPORT'].forEach(function(item, i){ %>
+      <span <%= i > 5 ? 'aria-hidden="true"' : '' %>><%= item %><i>✦</i></span>
+    <% }); %>
   </div>
 </section>
 
-<section class="features section">
-  <div class="side-shot left" style="background-image:url('/img/sec1.png')" aria-hidden="true"></div>
-  <div class="side-shot center" style="background-image:url('/img/sec3.png')" aria-hidden="true"></div>
-  <div class="side-shot right" style="background-image:url('/img/sec2.png')" aria-hidden="true"></div>
-  <h2 class="section-title"><%= t('features.title') %></h2>
+<section class="features section-shell" id="features">
+  <div class="section-kicker"><span>01</span><%= t('features.title') %></div>
+  <div class="section-heading">
+    <h2><%= t('features.title') %><span>Zephyr Client.</span></h2>
+    <p><%= t('hero.subtitle') %></p>
+  </div>
   <div class="feature-grid">
-    <%
-      const icons = {
-        f1: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.6 5.6L20.5 8.4l-4.3 4.1 1 6L12 15.8 6.8 18.5l1-6L3.5 8.4l5.9-.8z"/></svg>',
-        f2: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9.5 12l1.8 1.8L15 9.8"/></svg>',
-        f3: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg>',
-        f4: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 4v4h-4"/></svg>'
-      };
-    %>
-    <% ['f1','f2','f3','f4'].forEach(function(f){ %>
-      <div class="feature-card">
-        <div class="feature-ico"><%- icons[f] %></div>
-        <h3><%= t('features.' + f + '_t') %></h3>
-        <p><%= t('features.' + f + '_d') %></p>
+    <% ['f1','f2','f3','f4'].forEach(function(id, index){ var glyphs=['↗','⌁','◌','↻']; %>
+      <article class="feature-card reveal-on-scroll">
+        <div class="feature-topline"><span>0<%= index + 1 %></span><span class="feature-glyph" aria-hidden="true"><%= glyphs[index] %></span></div>
+        <h3><%= t('features.' + id + '_t') %></h3>
+        <p><%= t('features.' + id + '_d') %></p>
+        <strong>Zephyr / <%= index === 3 ? 'Auto update' : 'Premium system' %></strong>
+      </article>
+    <% }); %>
+  </div>
+</section>
+
+<section class="steps section-shell">
+  <div class="section-kicker"><span>02</span>Quick start</div>
+  <div class="section-heading compact"><h2><%= t('buy.title') %>.</h2><p><%= t('pricing.subtitle') %></p></div>
+  <div class="step-grid">
+    <article><span>01</span><div><h3><%= t('buy.choose_plan') %></h3><p><%= t('pricing.subtitle') %></p></div></article>
+    <article><span>02</span><div><h3><%= t('auth.login_title') %></h3><p><%= t('buy.need_login') %></p></div></article>
+    <article><span>03</span><div><h3><%= t('account.btn_download') %></h3><p><%= t('support.a1') %></p></div></article>
+  </div>
+</section>
+
+<section class="pricing section-shell" id="pricing">
+  <div class="section-kicker"><span>03</span><%= t('pricing.title') %></div>
+  <div class="section-heading compact"><h2><%= t('pricing.title') %>.</h2><p><%= t('pricing.subtitle') %></p></div>
+  <div class="pricing-grid">
+    <% ['month','season','lifetime'].forEach(function(id){ var p=plans[id]; var list=t('pricing.'+id+'_f'); %>
+      <article class="price-card <%= p.popular ? 'popular' : '' %> reveal-on-scroll">
+        <% if (p.popular) { %><span class="popular-label"><%= t('pricing.most_popular') %></span><% } %>
+        <div class="plan-title"><span><%= t('pricing.'+id+'_t') %></span><small>Zephyr access</small></div>
+        <div class="plan-price"><%= p.price.toLocaleString('ru-RU') %> ₽</div>
+        <div class="plan-period"><%= id === 'month' ? '30 days' : id === 'season' ? '90 days' : 'lifetime' %></div>
+        <ul><% list.forEach(function(item){ %><li><i>✓</i><%= item %></li><% }); %></ul>
+        <a class="button <%= p.popular ? 'button-primary' : 'button-secondary' %>" href="/buy?plan=<%= id %>"><%= t('pricing.buy_btn') %><span>→</span></a>
+      </article>
+    <% }); %>
+  </div>
+</section>
+
+<section class="faq section-shell" id="faq">
+  <div class="faq-heading">
+    <div class="section-kicker"><span>04</span><%= t('support.faq') %></div>
+    <h2><%= t('support.faq') %>.</h2>
+    <p><%= t('support.subtitle') %></p>
+  </div>
+  <div class="faq-list">
+    <% [1,2,3,4].forEach(function(i){ var open=i===1; %>
+      <div class="faq-item <%= open ? 'is-open' : '' %>">
+        <button class="faq-question" type="button" aria-expanded="<%= open ? 'true' : 'false' %>">
+          <span>0<%= i %></span><b><%= t('support.q' + i) %></b><i aria-hidden="true"></i>
+        </button>
+        <div class="faq-answer" aria-hidden="<%= open ? 'false' : 'true' %>"><div><p><%= t('support.a' + i) %></p></div></div>
       </div>
     <% }); %>
   </div>
 </section>
 
-<section class="section has-shot" style="--shot:url('/img/sec2.jpg')">
-  <div class="cta-band">
-    <div>
-      <h2><%= t('hero.cta_buy') %></h2>
-      <p class="muted"><%= t('pricing.subtitle') %></p>
-    </div>
-    <a href="/buy" class="btn btn-primary btn-lg"><%= t('nav.buy') %></a>
-  </div>
+<section class="final-cta section-shell" id="support">
+  <div class="final-glow" aria-hidden="true"></div>
+  <span class="shard final-shard-one" aria-hidden="true"></span><span class="shard final-shard-two" aria-hidden="true"></span>
+  <div class="final-logo"><img src="/img/zephyr-avatar.jpg" alt="Zephyr"></div>
+  <p>Ready?</p><h2>Launch Zephyr.</h2><span class="final-text"><%= t('pricing.subtitle') %></span>
+  <div class="final-actions"><a class="button button-primary magnetic" href="/buy"><%= t('hero.cta_buy') %><span>→</span></a><a class="button button-secondary" href="/support"><%= t('nav.support') %></a></div>
 </section>
 
 <%- include('partials/footer') %>

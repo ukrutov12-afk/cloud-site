@@ -1,4 +1,4 @@
-<%- include('partials/header', { pageTitle: 'Cloud — ' + t('account.title') }) %>
+<%- include('partials/header', { pageTitle: 'Zephyr — ' + t('account.title') }) %>
 <%
   var locMap = { ru: 'ru-RU', uk: 'uk-UA', be: 'be-BY', en: 'en-GB' };
   var loc = locMap[lang] || 'ru-RU';
@@ -37,7 +37,7 @@
   <div class="sub-row">
     <% if (sub) { %>
       <div>
-        <div class="sub-name">Cloud<% if (!sub.forever) { %> (<%= sub.daysLeft %> <%= t('account.days_short') %>)<% } %></div>
+        <div class="sub-name">Zephyr<% if (!sub.forever) { %> (<%= sub.daysLeft %> <%= t('account.days_short') %>)<% } %></div>
         <div class="muted small">
           <% if (sub.forever) { %><%= t('account.forever') %><% } else { %><%= t('account.until') %> <%= fdate(sub.until) %><% } %>
         </div>

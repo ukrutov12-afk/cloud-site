@@ -3,7 +3,7 @@
 # (бесплатный Postgres: Neon/Supabase) в Environment сервиса на Render.
 services:
   - type: web
-    name: cloud-site
+    name: zephyr-client
     runtime: node
     plan: free
     buildCommand: npm install
@@ -12,8 +12,12 @@ services:
       - key: NODE_ENV
         value: production
       - key: SITE_URL
-        value: https://cloudlegit.work.gd
+        sync: false
       - key: SESSION_SECRET
         generateValue: true   # Render сам сгенерит секрет
-      # - key: DATABASE_URL     # вставь строку подключения Postgres (Neon/Supabase)
-      #   sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: PURCHASES_FROZEN
+        value: "true"

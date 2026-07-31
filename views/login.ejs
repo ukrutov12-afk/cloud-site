@@ -1,18 +1,19 @@
-<%- include('partials/header', { pageTitle: 'Cloud — ' + t('auth.login_title') }) %>
+<%- include('partials/header', { pageTitle: 'Zephyr — ' + t('auth.login_title') }) %>
 
-<section class="section auth-wrap">
-  <div class="auth-card panel">
-    <h2 class="auth-title"><%= t('auth.login_title') %></h2>
-    <form action="/login" method="post" class="form">
-      <label class="field">
-        <span><%= t('auth.login_id') %></span>
-        <input type="text" name="email" value="<%= form.email || '' %>" required autocomplete="username">
-      </label>
-      <label class="field">
-        <span><%= t('auth.password') %></span>
-        <input type="password" name="password" required autocomplete="current-password">
-      </label>
-      <button type="submit" class="btn btn-primary btn-block btn-lg"><%= t('auth.login_btn') %></button>
+<section class="auth-page section-shell">
+  <div class="auth-visual" aria-hidden="true">
+    <div class="auth-orbit"></div>
+    <img src="/img/zephyr-avatar.jpg" alt="">
+    <span>Secure account access</span>
+  </div>
+  <div class="auth-card">
+    <span class="auth-kicker"><%= t('nav.account') %></span>
+    <h1><%= t('auth.login_title') %></h1>
+    <p><%= t('buy.need_login') %></p>
+    <form action="/login" method="post" class="auth-form" data-loading-form>
+      <label><span><%= t('auth.login_id') %></span><input type="text" name="email" value="<%= form.email || '' %>" required autocomplete="username" autofocus></label>
+      <label><span><%= t('auth.password') %></span><input type="password" name="password" required autocomplete="current-password"></label>
+      <button type="submit" class="auth-submit"><%= t('auth.login_btn') %><span aria-hidden="true">→</span></button>
     </form>
     <p class="auth-alt"><%= t('auth.no_account') %> <a href="/register"><%= t('auth.or_register') %></a></p>
   </div>

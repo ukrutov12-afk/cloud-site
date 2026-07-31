@@ -1,32 +1,18 @@
   </main>
 
-  <footer class="footer">
+  <footer>
     <div class="footer-inner">
-      <div class="footer-brand">
-        <div class="brand"><img src="/img/logo.png" class="brand-logo" alt="Cloud"><span class="brand-text">Cloud</span></div>
-        <p class="footer-made"><%= t('footer.made') %></p>
-      </div>
-      <div class="footer-col">
-        <h4><%= t('footer.nav') %></h4>
-        <a href="/"><%= t('nav.home') %></a>
+      <a class="brand" href="/">
+        <span class="brand-avatar"><img src="/img/zephyr-avatar.jpg" alt=""></span>
+        <span>Zephyr</span>
+      </a>
+      <p><%= t('footer.made') %></p>
+      <nav aria-label="Footer navigation">
         <a href="/buy"><%= t('nav.buy') %></a>
+        <a href="/docs/terms"><%= t('nav.docs') %></a>
         <a href="/support"><%= t('nav.support') %></a>
-      </div>
-      <div class="footer-col">
-        <h4><%= t('footer.docs') %></h4>
-        <a href="/docs/terms"><%= t('docs.terms') %></a>
-        <a href="/docs/privacy"><%= t('docs.privacy') %></a>
-        <a href="/docs/refund"><%= t('docs.refund') %></a>
-      </div>
-      <div class="footer-col">
-        <h4><%= t('footer.contacts') %></h4>
-        <a href="/support"><%= t('support.discord') %></a>
-        <a href="/support"><%= t('support.email_us') %></a>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>© <%= new Date().getFullYear() %> Cloud Client. <%= t('footer.rights') %>.</span>
-      <span style="opacity:.5;margin-left:10px">build <%= build %></span>
+      </nav>
+      <span>© <%= new Date().getFullYear() %> Zephyr Client</span>
     </div>
   </footer>
 

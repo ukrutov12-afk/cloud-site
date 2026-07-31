@@ -3,80 +3,79 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Cloud Client' %></title>
-  <meta name="description" content="Cloud — Minecraft 1.21.11 Fabric client. Liquid Glass UI.">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Zephyr Client' %></title>
+  <meta name="description" content="Zephyr — Minecraft 1.21.4 Fabric client with a fast interface, profiles and regular updates.">
   <link rel="canonical" href="<%= siteUrl %><%= currentPath %>">
-  <meta property="og:title" content="<%= typeof pageTitle !== 'undefined' ? pageTitle : 'Cloud Client' %>">
-  <meta property="og:description" content="Minecraft 1.21.11 Fabric client — Liquid Glass UI, clean bypasses, rich HUD.">
+  <meta property="og:title" content="<%= typeof pageTitle !== 'undefined' ? pageTitle : 'Zephyr Client' %>">
+  <meta property="og:description" content="Zephyr Client — smooth experience, flexible profiles and regular updates.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="<%= siteUrl %><%= currentPath %>">
-  <meta name="theme-color" content="#070a12">
-  <link rel="icon" type="image/png" href="/img/logo.png">
+  <meta name="theme-color" content="#07050b">
+  <link rel="icon" type="image/jpeg" href="/img/zephyr-avatar.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
-  <div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+<body class="page-<%= page %>">
+  <div class="page-noise" aria-hidden="true"></div>
 
-  <header class="nav">
-    <div class="nav-inner">
-      <a class="brand" href="/">
-        <img src="/img/logo.png" class="brand-logo" alt="Cloud">
-        <span class="brand-text">Cloud</span>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/" aria-label="Zephyr — <%= t('nav.home') %>">
+        <span class="brand-avatar"><img src="/img/zephyr-avatar.jpg" alt=""></span>
+        <span>Zephyr</span>
       </a>
 
-      <nav class="nav-links">
+      <nav class="desktop-nav" aria-label="Main navigation">
         <a href="/" class="<%= page==='home' ? 'active' : '' %>"><%= t('nav.home') %></a>
         <a href="/buy" class="<%= page==='buy' ? 'active' : '' %>"><%= t('nav.buy') %></a>
         <a href="/docs/terms" class="<%= page==='docs' ? 'active' : '' %>"><%= t('nav.docs') %></a>
         <a href="/support" class="<%= page==='support' ? 'active' : '' %>"><%= t('nav.support') %></a>
       </nav>
 
-      <div class="nav-right">
-        <!-- Выбор языка -->
-        <div class="lang" tabindex="0">
-          <button class="lang-btn" type="button">
-            <span class="globe">🌐</span>
-            <span><%= lang.toUpperCase() %></span>
-            <span class="chev">▾</span>
+      <div class="header-actions">
+        <div class="lang">
+          <button class="lang-btn" type="button" aria-haspopup="true" aria-expanded="false">
+            <span><%= lang.toUpperCase() %></span><i aria-hidden="true"></i>
           </button>
           <div class="lang-menu">
             <% langs.forEach(function(l){ %>
-              <a href="?lang=<%= l.code %>" class="<%= l.code===lang ? 'sel' : '' %>"><%= l.name %> <small><%= l.code.toUpperCase() %></small></a>
+              <a href="<%= currentPath %>?lang=<%= l.code %>" class="<%= l.code===lang ? 'sel' : '' %>">
+                <span><%= l.name %></span><small><%= l.code.toUpperCase() %></small>
+              </a>
             <% }); %>
           </div>
         </div>
 
         <% if (user) { %>
-          <a href="/account" class="nav-user" title="<%= t('nav.account') %>">
-            <span class="nav-user-av"><% if (user.avatar) { %><img src="<%= user.avatar %>" alt=""><% } else { %><%= (user.username||'C').charAt(0).toUpperCase() %><% } %></span>
-            <span class="nav-user-name"><%= user.username %></span>
+          <a href="/account" class="header-login is-active" title="<%= t('nav.account') %>">
+            <% if (user.avatar) { %><img class="header-user-avatar" src="<%= user.avatar %>" alt=""><% } else { %><i aria-hidden="true"></i><% } %>
+            <span><%= user.username %></span>
           </a>
-          <form action="/logout" method="post" style="display:inline">
-            <button class="btn btn-ghost" type="submit"><%= t('nav.logout') %></button>
+          <% if (isAdmin) { %><a href="/admin" class="admin-link" aria-label="Admin">A</a><% } %>
+          <form action="/logout" method="post" class="header-logout">
+            <button type="submit" aria-label="<%= t('nav.logout') %>" title="<%= t('nav.logout') %>">↗</button>
           </form>
-          <% if (isAdmin) { %><a href="/admin" class="btn btn-ghost" style="border-color:rgba(124,92,255,.5)">⚙ Admin</a><% } %>
         <% } else { %>
-          <a href="/login" class="btn btn-ghost"><%= t('nav.login') %></a>
-          <a href="/register" class="btn btn-primary"><%= t('nav.register') %></a>
+          <a class="header-login" href="/login"><i aria-hidden="true"></i><span><%= t('nav.login') %></span></a>
+          <a class="header-cta magnetic" href="/register"><%= t('nav.register') %><span aria-hidden="true">↗</span></a>
         <% } %>
-      </div>
 
-      <button class="burger" type="button" aria-label="menu"><span></span><span></span><span></span></button>
+        <button class="mobile-toggle" type="button" aria-label="Menu" aria-expanded="false"><span></span><span></span></button>
+      </div>
     </div>
-    <nav class="nav-mobile">
+    <nav class="mobile-nav" aria-label="Mobile navigation">
       <a href="/"><%= t('nav.home') %></a>
       <a href="/buy"><%= t('nav.buy') %></a>
       <a href="/docs/terms"><%= t('nav.docs') %></a>
       <a href="/support"><%= t('nav.support') %></a>
-      <% if (user) { %><a href="/account"><%= t('nav.account') %></a><% } else { %>
-      <a href="/login"><%= t('nav.login') %></a><a href="/register"><%= t('nav.register') %></a><% } %>
+      <% if (user) { %><a href="/account"><%= t('nav.account') %></a><% } else { %><a href="/login"><%= t('nav.login') %></a><% } %>
     </nav>
   </header>
 
   <% if (flash) { %>
-    <div class="flash flash-<%= flash.type %>"><%= t(flash.key) %></div>
+    <div class="flash flash-<%= flash.type %>" role="status"><%= t(flash.key) %></div>
   <% } %>
 
-  <main class="main">
+  <main class="site-main">

@@ -11,8 +11,8 @@
     "logout": "Log out"
   },
   "hero": {
-    "badge": "Minecraft 1.21.11 • Fabric",
-    "title": "Cloud — a client that reads the game",
+    "badge": "Minecraft 1.21.4 • Fabric",
+    "title": "Zephyr — a client that reads the game",
     "subtitle": "Smooth Liquid Glass interface, clean bypasses, thoughtful modules. Built for people who care about quality.",
     "cta_buy": "Buy the client",
     "cta_docs": "Documentation",
@@ -22,7 +22,7 @@
     "stat_modules": "modules"
   },
   "features": {
-    "title": "Why Cloud",
+    "title": "Why Zephyr",
     "f1_t": "Best legit on the market",
     "f1_d": "Top-tier yet affordable legit software — clean, working features with no overpaying and no needless flags.",
     "f2_t": "Subtle bypasses",
@@ -133,9 +133,9 @@
     "subtitle": "Didn't find an answer? Write to us — we reply fast.",
     "faq": "FAQ",
     "q1": "How do I install the client?",
-    "a1": "Download the .jar from your account, drop it into the mods folder next to Fabric Loader for 1.21.11, and launch via the Fabric profile.",
+    "a1": "Download the .jar from your account, drop it into the mods folder next to Fabric Loader for 1.21.4, and launch via the Fabric profile.",
     "q2": "Are other versions supported?",
-    "a2": "The main version right now is 1.21.11. Support for newer versions is added as they release.",
+    "a2": "The main version right now is 1.21.4. Support for newer versions is added as they release.",
     "q3": "Can I get banned?",
     "a3": "Any third-party software carries risk. We keep bypasses careful, but no one can guarantee safety.",
     "q4": "How do refunds work?",
