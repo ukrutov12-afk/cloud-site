@@ -1,4 +1,13 @@
 <%- include('partials/header', { pageTitle: 'Zephyr Client — ' + t('nav.home') }) %>
+<%
+  var featureIcons = [
+    '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="7.5"></circle><circle cx="12" cy="12" r="2.25"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"></path></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 18c1.4-5.9 4.2-9.5 8.4-10.8"></path><path d="m11.7 4.8 4.8 1.1-1.1 4.8"></path><circle cx="5" cy="18" r="2"></circle><circle cx="18.5" cy="5.5" r="2"></circle></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="3"></rect><path d="M8.5 4v16M8.5 10h12M13 14h3.5M13 17h5"></path></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19.2 8.4A8 8 0 1 0 20 14"></path><path d="M19.2 3.8v4.6h-4.6"></path><path d="M12 8v4.4l2.8 1.7"></path></svg>'
+  ];
+  var tickerItems = ['SMOOTH','FLEXIBLE','FAST','PROFILES','UPDATES','SUPPORT'];
+%>
 
 <section class="hero section-shell" id="top">
   <div class="aurora aurora-one" aria-hidden="true"></div>
@@ -32,8 +41,8 @@
         <img src="/img/zephyr-avatar.jpg" alt="Zephyr crystal logo">
         <div class="logo-card-caption"><span><i aria-hidden="true"></i>System online</span><b>Zephyr / 1.21.4</b></div>
       </div>
-      <div class="floating-card floating-card-one"><span class="mini-icon">◇</span><span><small>Performance</small><strong>FPS friendly</strong></span></div>
-      <div class="floating-card floating-card-two"><span class="mini-icon">⌁</span><span><small>Profiles</small><strong>Built around you</strong></span></div>
+      <div class="floating-card floating-card-one"><span class="mini-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 16a8 8 0 1 1 14 0"></path><path d="m12 13 4-4"></path><circle cx="12" cy="13" r="1.25"></circle></svg></span><span><small>Performance</small><strong>FPS friendly</strong></span></div>
+      <div class="floating-card floating-card-two"><span class="mini-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h8M16 7h4M4 17h3M11 17h9"></path><circle cx="14" cy="7" r="2"></circle><circle cx="9" cy="17" r="2"></circle></svg></span><span><small>Profiles</small><strong>Built around you</strong></span></div>
     </div>
   </div>
   <a class="scroll-hint" href="#features" aria-label="Scroll"><span>SCROLL TO EXPLORE</span><i aria-hidden="true"></i></a>
@@ -41,8 +50,10 @@
 
 <section class="ticker" aria-label="Zephyr highlights">
   <div class="ticker-track">
-    <% ['SMOOTH','FLEXIBLE','FAST','PROFILES','UPDATES','SUPPORT','SMOOTH','FLEXIBLE','FAST','PROFILES','UPDATES','SUPPORT'].forEach(function(item, i){ %>
-      <span <%= i > 5 ? 'aria-hidden="true"' : '' %>><%= item %><i>✦</i></span>
+    <% [0, 1].forEach(function(group){ %>
+      <div class="ticker-group" <%- group === 1 ? 'aria-hidden="true"' : '' %>>
+        <% tickerItems.forEach(function(item){ %><span><%= item %><i>✦</i></span><% }); %>
+      </div>
     <% }); %>
   </div>
 </section>
@@ -54,9 +65,9 @@
     <p><%= t('hero.subtitle') %></p>
   </div>
   <div class="feature-grid">
-    <% ['f1','f2','f3','f4'].forEach(function(id, index){ var glyphs=['↗','⌁','◌','↻']; %>
+    <% ['f1','f2','f3','f4'].forEach(function(id, index){ %>
       <article class="feature-card reveal-on-scroll">
-        <div class="feature-topline"><span>0<%= index + 1 %></span><span class="feature-glyph" aria-hidden="true"><%= glyphs[index] %></span></div>
+        <div class="feature-topline"><span>0<%= index + 1 %></span><span class="feature-glyph" aria-hidden="true"><%- featureIcons[index] %></span></div>
         <h3><%= t('features.' + id + '_t') %></h3>
         <p><%= t('features.' + id + '_d') %></p>
         <strong>Zephyr / <%= index === 3 ? 'Auto update' : 'Premium system' %></strong>

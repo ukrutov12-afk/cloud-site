@@ -24,7 +24,9 @@ body {
   margin: 0;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at 8% 4%, rgba(83, 35, 176, 0.14), transparent 24rem),
+    radial-gradient(ellipse 62% 44% at 5% 0%, rgba(96, 52, 190, 0.14), transparent 72%),
+    radial-gradient(ellipse 54% 40% at 94% 26%, rgba(58, 35, 118, 0.1), transparent 75%),
+    linear-gradient(145deg, #07060b 0%, #090712 48%, #06050a 100%),
     #06050a;
   color: var(--ink);
   font-family: Inter, Manrope, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -63,8 +65,11 @@ a:focus-visible {
   inset: 0;
   z-index: 99;
   pointer-events: none;
-  opacity: 0.045;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.75'/%3E%3C/svg%3E");
+  opacity: 1;
+  background:
+    radial-gradient(ellipse 52% 38% at 12% 18%, rgba(122, 70, 232, 0.055), transparent 72%),
+    radial-gradient(ellipse 48% 34% at 82% 64%, rgba(94, 53, 182, 0.045), transparent 75%),
+    linear-gradient(115deg, transparent 22%, rgba(181, 146, 255, 0.018) 48%, transparent 73%);
   mix-blend-mode: screen;
 }
 
@@ -264,7 +269,7 @@ a:focus-visible {
   position: relative;
   min-height: 100svh;
   padding-top: 136px;
-  padding-bottom: 82px;
+  padding-bottom: 122px;
   display: flex;
   align-items: center;
   isolation: isolate;
@@ -707,7 +712,16 @@ a:focus-visible {
   border-radius: 11px;
   background: linear-gradient(145deg, rgba(159, 107, 255, 0.34), rgba(90, 43, 181, 0.16));
   color: #c7a8ff;
-  font-size: 23px;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.09), 0 8px 24px rgba(65, 33, 132, 0.18);
+}
+
+.mini-icon svg {
+  width: 21px;
+  height: 21px;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .floating-card > span:last-child {
@@ -729,8 +743,8 @@ a:focus-visible {
 
 .scroll-hint {
   position: absolute;
-  left: 0;
-  bottom: 36px;
+  left: 50%;
+  bottom: 30px;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -738,13 +752,14 @@ a:focus-visible {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.2em;
-  writing-mode: vertical-rl;
+  white-space: nowrap;
+  transform: translateX(-50%);
 }
 
 .scroll-hint i {
-  width: 1px;
-  height: 42px;
-  background: linear-gradient(var(--violet), transparent);
+  width: 42px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--violet), transparent);
   animation: scroll-line 2s ease-in-out infinite;
 }
 
@@ -773,18 +788,31 @@ a:focus-visible {
   height: 62px;
   display: flex;
   align-items: center;
+  will-change: transform;
   animation: ticker-move 26s linear infinite;
 }
 
-.ticker-track span {
-  padding-right: 35px;
-  display: inline-flex;
+.ticker-group {
+  min-width: 100vw;
+  height: 100%;
+  padding-inline: clamp(20px, 3vw, 54px);
+  display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 35px;
+  justify-content: space-between;
+}
+
+.ticker-group span {
+  padding-inline: clamp(12px, 1.5vw, 28px);
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: clamp(20px, 2.2vw, 38px);
   color: #7b718d;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.24em;
+  white-space: nowrap;
 }
 
 .ticker-track i {
@@ -909,15 +937,33 @@ a:focus-visible {
 }
 
 .feature-glyph {
+  position: relative;
   width: 48px;
   height: 48px;
   display: grid;
   place-items: center;
   border: 1px solid rgba(191, 167, 255, 0.17);
   border-radius: 13px;
-  background: rgba(139, 92, 246, 0.07);
-  color: #b88cff;
-  font-size: 24px;
+  background: linear-gradient(145deg, rgba(139, 92, 246, 0.16), rgba(139, 92, 246, 0.045));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.08), 0 10px 28px rgba(72, 36, 143, 0.16);
+  color: #c19aff;
+  transition: transform 0.35s ease, border-color 0.35s ease, background 0.35s ease;
+}
+
+.feature-glyph svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 8px rgba(179, 132, 255, 0.28));
+}
+
+.feature-card:hover .feature-glyph {
+  transform: translateY(-2px) scale(1.06);
+  border-color: rgba(202, 174, 255, 0.35);
+  background: linear-gradient(145deg, rgba(151, 99, 255, 0.24), rgba(139, 92, 246, 0.08));
 }
 
 .feature-card h3 {
@@ -2033,12 +2079,12 @@ footer {
 }
 
 @keyframes scroll-line {
-  0%, 100% { opacity: .25; transform: scaleY(.65); transform-origin: top; }
-  50% { opacity: 1; transform: scaleY(1); }
+  0%, 100% { opacity: .25; transform: scaleX(.65); transform-origin: left; }
+  50% { opacity: 1; transform: scaleX(1); }
 }
 
 @keyframes ticker-move {
-  to { transform: translateX(-50%); }
+  to { transform: translate3d(-50%, 0, 0); }
 }
 
 @keyframes interface-shimmer {
