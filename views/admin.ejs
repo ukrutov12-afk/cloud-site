@@ -1,4 +1,4 @@
-<%- include('partials/header', { pageTitle: 'Zephyr — Admin' }) %>
+<%- include('partials/header', { pageTitle: 'Zephyr - Admin' }) %>
 
 <section class="section">
   <div class="admin-head">
@@ -37,7 +37,7 @@
         <tbody>
           <% users.forEach(function(u){ %>
             <%
-              var subTxt = '—';
+              var subTxt = '-';
               if (isAdminFn(u)) subTxt = '∞';
               else if (u.subForever) subTxt = '∞';
               else if (u.subUntil) { var dl = Math.max(0, Math.ceil((new Date(u.subUntil)-new Date())/86400000)); subTxt = dl + ' дн.'; }

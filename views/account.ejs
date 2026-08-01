@@ -1,4 +1,4 @@
-<%- include('partials/header', { pageTitle: 'Zephyr — ' + t('account.title') }) %>
+<%- include('partials/header', { pageTitle: 'Zephyr - ' + t('account.title') }) %>
 <%
   var locMap = { ru: 'ru-RU', uk: 'uk-UA', be: 'be-BY', en: 'en-GB' };
   var loc = locMap[lang] || 'ru-RU';
@@ -72,7 +72,7 @@
     <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.login %></i><%= t('account.login') %></span><span class="dr-v"><%= account.username %></span></div>
     <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.mail %></i><%= t('account.email') %></span><span class="dr-v"><%= account.email %></span></div>
     <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.cal %></i><%= t('account.registered') %></span><span class="dr-v"><%= fdate(account.createdAt) %></span></div>
-    <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.hwid %></i><%= t('account.hwid') %></span><span class="dr-v mono"><%= account.hwid || ('— ' + t('account.hwid_none')) %></span></div>
+    <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.hwid %></i><%= t('account.hwid') %></span><span class="dr-v mono"><%= account.hwid || ('- ' + t('account.hwid_none')) %></span></div>
   </div>
 
   <hr class="prof-hr">
