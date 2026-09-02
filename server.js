@@ -1043,10 +1043,24 @@ app.use((err, req, res, next) => {
   res.status(500).render('404', { page: '404' });
 });
 
+// Анти-сон render-free: раз в N минут тихо пингуем свой публичный /healthz.
+// Это входящий HTTP-запрос через edge render'а → таймер простоя сбрасывается,
+// сайт не паузится и не показывает "Render loading...". Только на проде и только
+// по публичному URL (пинг localhost render'ом не считается за трафик).
+function startKeepalive() {
+  const base = process.env.KEEPALIVE_URL || SITE_URL || '';
+  if (!IS_PROD || !/^https?:\/\//.test(base) || /localhost|127\.0\.0\.1/.test(base)) return;
+  const url = base.replace(/\/+$/, '') + '/healthz';
+  const minutes = Math.max(1, parseInt(process.env.KEEPALIVE_MIN, 10) || 10); // render спит на ~15 мин
+  setInterval(() => { fetch(url, { cache: 'no-store' }).catch(() => {}); }, minutes * 60 * 1000);
+  console.log(`  keepalive: ${url} каждые ${minutes} мин`);
+}
+
 db.init().then(() => {
   app.listen(PORT, HOST, () => {
     console.log(`\n  Zephyr site listening on ${HOST}:${PORT}`);
     console.log(`  Public: ${SITE_URL}\n`);
+    startKeepalive();
   });
 }).catch((e) => {
   console.error('DB init failed:', e);
