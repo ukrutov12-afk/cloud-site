@@ -58,7 +58,7 @@
       <div class="checkout-main panel">
         <h3 class="panel-h"><%= t('buy.choose_plan') %></h3>
         <div class="plan-picker">
-          <% ['month','season','lifetime'].forEach(function(id){ var p = plans[id]; %>
+          <% ['month','season','halfyear','lifetime','lifetime_beta'].forEach(function(id){ var p = plans[id]; %>
             <label class="plan-opt <%= id===plan.id ? 'sel' : '' %>" data-price="<%= p.price %>" data-name="<%= t('pricing.'+id+'_t') %>" data-id="<%= id %>">
               <input type="radio" name="plan" value="<%= id %>" <%= id===plan.id ? 'checked' : '' %>>
               <span class="po-name"><%= t('pricing.'+id+'_t') %></span>
@@ -66,11 +66,6 @@
             </label>
           <% }); %>
         </div>
-
-        <label class="beta-check" id="betaWrap">
-          <input type="checkbox" name="beta" id="betaChk">
-          <span><%= t('buy.beta_addon') %></span>
-        </label>
 
         <% if (frozen) { %>
           <a href="#frozen" class="btn btn-primary btn-lg btn-block" style="margin-top:18px"><%= t('buy.preorder') %></a>
@@ -89,7 +84,6 @@
       <aside class="checkout-side panel">
         <h3 class="panel-h"><%= t('buy.summary') %></h3>
         <div class="sum-row"><span id="sumName"><%= t('pricing.'+plan.id+'_t') %></span><span id="sumBase"><%= plan.price %> ₽</span></div>
-        <div class="sum-row" id="sumBetaRow" style="display:none"><span><%= t('buy.beta_addon') %></span><span>+200 ₽</span></div>
         <div class="sum-total"><span><%= t('buy.summary') %></span><strong id="sumTotal"><%= plan.price %> ₽</strong></div>
       </aside>
     </div>
@@ -125,30 +119,18 @@
     range.addEventListener('input', updTrial); updTrial();
   }
 
-  // ── выбор тарифа + бета ──
-  var BETA_ADD = 200;
+  // ── выбор тарифа ──
   var opts = document.querySelectorAll('.plan-opt');
-  var betaChk = document.getElementById('betaChk');
-  var betaWrap = document.getElementById('betaWrap');
   function curPlan(){ var c = document.querySelector('.plan-opt input:checked'); return c ? c.closest('.plan-opt') : null; }
   function updSum(){
     var el = curPlan(); if (!el) return;
-    var id = el.dataset.id, base = +el.dataset.price, name = el.dataset.name;
-    var isLife = id === 'lifetime';
-    // бета только для «навсегда»
-    betaWrap.style.opacity = isLife ? '1' : '.4';
-    betaChk.disabled = !isLife;
-    if (!isLife) betaChk.checked = false;
-    var beta = isLife && betaChk.checked;
-    var total = base + (beta ? BETA_ADD : 0);
-    document.getElementById('sumName').textContent = name + (beta ? ' + Beta' : '');
+    var base = +el.dataset.price, name = el.dataset.name;
+    document.getElementById('sumName').textContent = name;
     document.getElementById('sumBase').textContent = base + ' ₽';
-    document.getElementById('sumBetaRow').style.display = beta ? 'flex' : 'none';
-    document.getElementById('sumTotal').textContent = total + ' ₽';
+    document.getElementById('sumTotal').textContent = base + ' ₽';
     opts.forEach(function(o){ o.classList.toggle('sel', o === el); });
   }
   opts.forEach(function(o){ o.querySelector('input').addEventListener('change', updSum); });
-  if (betaChk) betaChk.addEventListener('change', updSum);
   updSum();
 </script>
 

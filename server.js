@@ -86,10 +86,11 @@ function t(lang, keyPath) {
 
 // ─────────────────────────── Тарифы (₽) ───────────────────────────
 const PLANS = {
-  month:         { id: 'month',         price: 299, currency: 'RUB', months: 1 },
-  season:        { id: 'season',        price: 699, currency: 'RUB', months: 3, popular: true },
-  lifetime:      { id: 'lifetime',      price: 1999, currency: 'RUB', months: 0 },
-  lifetime_beta: { id: 'lifetime_beta', price: 2199, currency: 'RUB', months: 0, beta: true }
+  month:         { id: 'month',         price: 149, currency: 'RUB', months: 1 },
+  season:        { id: 'season',        price: 499, currency: 'RUB', months: 3, popular: true },
+  halfyear:      { id: 'halfyear',      price: 699, currency: 'RUB', months: 6 },
+  lifetime:      { id: 'lifetime',      price: 999, currency: 'RUB', months: 0 },
+  lifetime_beta: { id: 'lifetime_beta', price: 1199, currency: 'RUB', months: 0, beta: true }
 };
 // Пробный период — цена за N дней (1..7). Один раз на аккаунт.
 const TRIAL_PRICES = { 1: 39, 2: 42, 3: 45, 4: 49, 5: 52, 6: 55, 7: 59 };
@@ -102,6 +103,7 @@ function trialPrice(days) {
 function planDays(planId) {
   if (planId === 'month') return 30;
   if (planId === 'season') return 90;
+  if (planId === 'halfyear') return 180;
   if (planId === 'lifetime' || planId === 'lifetime_beta') return null;
   const m = /^trial_(\d+)d$/.exec(String(planId)); if (m) return parseInt(m[1], 10);
   return null;
@@ -293,7 +295,7 @@ app.post('/api/launcher/launch', async (req, res) => {
       '\u{1F7E3} <b>Zephyr запущен</b>\n' +
       'Аккаунт: <b>' + esc(user.username) + '</b> (UID ' + uid + ')\n' +
       'HWID: <code>' + esc(sess.hwid || '—') + '</code>\n' +
-      'Время (UTC): ' + new Date().toISOString().slice(0, 19).replace('T', ' ')
+      'Время (МСК): ' + new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', hour12: false })
     );
     res.json({ ok: true });
   } catch (e) { console.error(e); res.status(500).json({ ok: false }); }
@@ -315,11 +317,8 @@ app.get('/buy', async (req, res, next) => {
 app.post('/buy', requireAuth, async (req, res, next) => {
   try {
     if (FROZEN) { flash(req, 'error', 'buy.frozen_flash'); return res.redirect('/buy'); }
-    let plan = PLANS[req.body.plan] || PLANS.lifetime;
-    // чекбокс беты применим только к «навсегда»
-    if (plan.id === 'lifetime' && (req.body.beta === 'on' || req.body.beta === '1')) {
-      plan = PLANS.lifetime_beta;
-    }
+    // бета теперь отдельный продукт (lifetime_beta), выбирается как обычный тариф
+    const plan = PLANS[req.body.plan] || PLANS.lifetime;
     await db.createOrder({ userId: req.session.userId, plan: plan.id, price: plan.price, currency: plan.currency });
     await applySub(req.session.userId, plan.id, planDays(plan.id));
     flash(req, 'success', 'buy.order_created');

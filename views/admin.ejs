@@ -97,7 +97,7 @@
         <tbody>
           <% launches.forEach(function(l){ %>
             <tr>
-              <td class="muted small"><%= new Date(l.ts).toLocaleString() %></td>
+              <td class="muted small"><%= new Date(l.ts).toLocaleString('ru-RU',{timeZone:'Europe/Moscow'}) %></td>
               <td><%= l.uid %></td>
               <td class="mono small" title="<%= l.hwid || '' %>"><%= l.hwid ? (l.hwid.slice(0,20) + '…') : '—' %></td>
             </tr>
@@ -122,7 +122,7 @@
               <td><%= o.plan %></td>
               <td><%= o.price %> ₽</td>
               <td><span class="status status-<%= o.status %>"><%= o.status %></span></td>
-              <td class="muted small"><%= new Date(o.createdAt).toLocaleString() %></td>
+              <td class="muted small"><%= new Date(o.createdAt).toLocaleString('ru-RU',{timeZone:'Europe/Moscow'}) %></td>
               <td>
                 <div class="grant-form">
                   <% if (o.status !== 'paid') { %>
@@ -158,7 +158,7 @@
       document.getElementById('m-up').textContent = fmtUp(d.uptimeSec);
       document.getElementById('m-rss').textContent = d.rssMb + ' MB';
       document.getElementById('m-heap').textContent = d.heapMb + ' MB';
-      document.getElementById('clock').textContent = new Date(d.now).toLocaleString();
+      document.getElementById('clock').textContent = new Date(d.now).toLocaleString('ru-RU',{timeZone:'Europe/Moscow'});
     }catch(e){}
   }
   poll(); setInterval(poll, 5000);

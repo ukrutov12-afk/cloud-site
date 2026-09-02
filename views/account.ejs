@@ -2,7 +2,7 @@
 <%
   var locMap = { ru: 'ru-RU', uk: 'uk-UA', be: 'be-BY', en: 'en-GB' };
   var loc = locMap[lang] || 'ru-RU';
-  function fdate(s){ try { return new Date(s).toLocaleString(loc, {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); } catch(e){ return s; } }
+  function fdate(s){ try { return new Date(s).toLocaleString(loc, {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'}); } catch(e){ return s; } }
   // UID: из БД или стабильно выводим из id
   var uid = account.uid;
   if (!uid) { uid = 0; for (var i=0;i<account.id.length;i++) uid=(uid*31+account.id.charCodeAt(i))%90000; uid+=10000; }
@@ -44,7 +44,7 @@
       </div>
       <div class="sub-right">
         <span class="sub-status <%= sub.active ? 'on' : 'off' %>"><%= sub.active ? t('account.status_active') : t('account.status_expired') %></span>
-        <a href="/buy" class="btn btn-primary sub-renew"><%= t('account.renew') %></a>
+        <% if (!sub.forever) { %><a href="/buy" class="btn btn-primary sub-renew"><%= t('account.renew') %></a><% } %>
       </div>
     <% } else { %>
       <div><div class="sub-name muted"><%= t('account.no_sub') %></div></div>
