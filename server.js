@@ -136,6 +136,13 @@ function applyDiscount(price, user) {
   return { base: price, pct, final: Math.round(price * (100 - pct) / 100) };
 }
 
+// ─────────── Стриминг защищённых классов (трек-A) ───────────
+// build_key (AES-256, base64) шифрует payload; отдаётся ТОЛЬКО сессии по HTTPS.
+// Пусто = стрим выключен (без ключа сервер ничего не расшифрует и не отдаст смысла).
+// Секрет держим в env (публичный репо!), payload — в PAYLOAD_DIR (в .gitignore).
+const BUILD_KEY_B64 = process.env.ZEPHYR_BUILD_KEY || '';
+const PAYLOAD_DIR = path.resolve(process.env.ZEPHYR_PAYLOAD_DIR || path.join(__dirname, 'payload'));
+
 // Пробный период — цена за N дней (1..7). Один раз на аккаунт.
 const TRIAL_PRICES = { 1: 39, 2: 42, 3: 45, 4: 49, 5: 52, 6: 55, 7: 59 };
 function trialPrice(days) {
@@ -452,7 +459,9 @@ app.post('/api/launcher/auth', async (req, res) => {
     }
 
     const token = await db.createLauncherSession({ userId: user.id, hwid: user.hwid });
-    res.json({ ok: true, token, uid: accountUid(user), username: user.username });
+    const resp = { ok: true, token, uid: accountUid(user), username: user.username };
+    if (BUILD_KEY_B64) resp.key = BUILD_KEY_B64; // ключ сессии для расшифровки классов
+    res.json(resp);
   } catch (e) { console.error(e); res.status(500).json({ ok: false, message: 'Ошибка сервера.' }); }
 });
 
@@ -478,6 +487,28 @@ app.post('/api/launcher/launch', async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) { console.error(e); res.status(500).json({ ok: false }); }
+});
+
+// Отдаёт зашифрованный класс по бинарному имени валидной сессии (трек-A).
+// Формат блоба — [12 IV][ct+tag] (AES-256-GCM), расшифровывает клиент ключом сессии.
+app.get('/api/launcher/class', async (req, res) => {
+  try {
+    const auth = req.headers.authorization || '';
+    if (!auth.startsWith('Bearer ')) return res.sendStatus(401);
+    const sess = await db.findLauncherSession(auth.slice(7));
+    if (!sess) return res.sendStatus(401);
+    const user = await db.findById(sess.userId);
+    if (!user || isBanned(user) || user.frozen || !subActive(user)) return res.sendStatus(403);
+
+    const name = String(req.query.name || '');
+    if (!/^[A-Za-z0-9._$]+$/.test(name)) return res.sendStatus(400); // заодно рубит traversal
+    const f = path.resolve(PAYLOAD_DIR, name);
+    if (path.dirname(f) !== PAYLOAD_DIR) return res.sendStatus(400);
+    if (!fs.existsSync(f)) return res.sendStatus(404);
+
+    res.set('Content-Type', 'application/octet-stream');
+    res.send(fs.readFileSync(f));
+  } catch (e) { console.error(e); res.sendStatus(500); }
 });
 
 // ── Telegram-бот (webhook): только админ создаёт промокоды ──

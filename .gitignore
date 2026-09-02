@@ -1,5 +1,6 @@
 node_modules/
 data/
+payload/
 .env
 *.log
 .DS_Store
