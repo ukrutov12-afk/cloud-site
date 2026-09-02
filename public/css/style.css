@@ -664,9 +664,9 @@ a:focus-visible {
   z-index: 2;
   width: 32px;
   height: 56px;
-  border: 1px solid rgba(230, 220, 255, 0.38);
-  background: linear-gradient(145deg, rgba(227, 213, 255, 0.5), rgba(118, 61, 223, 0.18) 48%, rgba(24, 13, 47, 0.15));
-  box-shadow: inset 8px 0 16px rgba(255, 255, 255, 0.1), 0 0 30px rgba(139, 92, 246, 0.22);
+  /* без border: на острых вершинах clip-path он давал белую точку в углу */
+  background: linear-gradient(145deg, rgba(227, 213, 255, 0.42), rgba(118, 61, 223, 0.2) 48%, rgba(24, 13, 47, 0.15));
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.22);
   clip-path: polygon(50% 0, 100% 25%, 73% 100%, 14% 81%, 0 26%);
   backdrop-filter: blur(8px);
 }

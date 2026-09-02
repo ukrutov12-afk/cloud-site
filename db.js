@@ -90,6 +90,12 @@ async function initPg() {
       state      TEXT,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
+    -- поддержка: пересланное админу сообщение -> чат юзера (для ответа свайпом)
+    CREATE TABLE IF NOT EXISTS support_threads (
+      fwd_msg_id   TEXT PRIMARY KEY,
+      user_chat_id TEXT NOT NULL,
+      ts           TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
   `);
   // тип промика: 'days' (ключ на подписку) или 'discount' (скидка %)
   await pg.query(`
@@ -239,7 +245,16 @@ const pgApi = {
       'ON CONFLICT (chat_id) DO UPDATE SET state=$2, updated_at=now()',
       [String(chatId), JSON.stringify(obj)]);
   },
-  async clearBotState(chatId) { await pg.query('DELETE FROM bot_state WHERE chat_id=$1', [String(chatId)]); }
+  async clearBotState(chatId) { await pg.query('DELETE FROM bot_state WHERE chat_id=$1', [String(chatId)]); },
+  // ── поддержка ──
+  async setSupportThread(fwdMsgId, userChatId) {
+    await pg.query('INSERT INTO support_threads (fwd_msg_id, user_chat_id) VALUES ($1,$2) ON CONFLICT (fwd_msg_id) DO UPDATE SET user_chat_id=$2',
+      [String(fwdMsgId), String(userChatId)]);
+  },
+  async getSupportUser(fwdMsgId) {
+    const { rows } = await pg.query('SELECT user_chat_id FROM support_threads WHERE fwd_msg_id=$1', [String(fwdMsgId)]);
+    return rows[0] ? rows[0].user_chat_id : null;
+  }
 };
 
 // ─────────────────────────── JSON-file backend ───────────────────────────
@@ -251,6 +266,7 @@ const LAUNCHES_FILE = path.join(DATA_DIR, 'launches.json');
 const PROMOS_FILE = path.join(DATA_DIR, 'promos.json');
 const REDEMPTIONS_FILE = path.join(DATA_DIR, 'promo_redemptions.json');
 const BOTSTATE_FILE = path.join(DATA_DIR, 'bot_state.json');
+const SUPPORT_FILE = path.join(DATA_DIR, 'support_threads.json');
 function ensureFiles() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, '[]');
@@ -260,6 +276,7 @@ function ensureFiles() {
   if (!fs.existsSync(PROMOS_FILE)) fs.writeFileSync(PROMOS_FILE, '[]');
   if (!fs.existsSync(REDEMPTIONS_FILE)) fs.writeFileSync(REDEMPTIONS_FILE, '[]');
   if (!fs.existsSync(BOTSTATE_FILE)) fs.writeFileSync(BOTSTATE_FILE, '{}');
+  if (!fs.existsSync(SUPPORT_FILE)) fs.writeFileSync(SUPPORT_FILE, '{}');
 }
 function readJSON(f) { try { return JSON.parse(fs.readFileSync(f, 'utf8') || '[]'); } catch { return []; } }
 function writeJSON(f, d) { fs.writeFileSync(f, JSON.stringify(d, null, 2)); }
@@ -377,6 +394,15 @@ const fileApi = {
   async clearBotState(chatId) {
     let all; try { all = JSON.parse(fs.readFileSync(BOTSTATE_FILE, 'utf8') || '{}'); } catch { all = {}; }
     delete all[String(chatId)]; fs.writeFileSync(BOTSTATE_FILE, JSON.stringify(all, null, 2));
+  },
+  // ── поддержка ──
+  async setSupportThread(fwdMsgId, userChatId) {
+    let all; try { all = JSON.parse(fs.readFileSync(SUPPORT_FILE, 'utf8') || '{}'); } catch { all = {}; }
+    all[String(fwdMsgId)] = String(userChatId); fs.writeFileSync(SUPPORT_FILE, JSON.stringify(all, null, 2));
+  },
+  async getSupportUser(fwdMsgId) {
+    let all; try { all = JSON.parse(fs.readFileSync(SUPPORT_FILE, 'utf8') || '{}'); } catch { all = {}; }
+    return all[String(fwdMsgId)] || null;
   }
 };
 

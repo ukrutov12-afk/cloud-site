@@ -45,7 +45,9 @@ const CONTACTS = {
   telegramName: process.env.TELEGRAM_NAME || '@maboycrime',
   support: process.env.SUPPORT_URL || 'https://t.me/maboycrime',
   supportName: process.env.SUPPORT_NAME || '@maboycrime',
-  email: process.env.SUPPORT_EMAIL || ''
+  email: process.env.SUPPORT_EMAIL || '',
+  // поддержка теперь через бота: юзер пишет боту -> пересылается админу в лс
+  supportBot: process.env.SUPPORT_BOT_URL || 'https://t.me/ghjfdhngdfkjghnfkhnbfgkbot'
 };
 
 // ─────────── Telegram-уведомления о запусках лаунчера ───────────
@@ -70,6 +72,22 @@ function tgSend(chatId, text) {
   }).catch(() => {});
 }
 function notifyTelegram(text) { return tgSend(TG_CHAT_ID, text); }
+
+// ── Отдельный бот ПОДДЕРЖКИ (свой токен, свой вебхук) ──
+const SUPPORT_BOT_TOKEN = process.env.SUPPORT_BOT_TOKEN || '';
+const SUPPORT_WEBHOOK_SECRET = process.env.SUPPORT_WEBHOOK_SECRET || '';
+// универсальный вызов Telegram API для произвольного бота; возвращает result или null
+async function tgApi(token, method, payload) {
+  if (!token) return null;
+  try {
+    const r = await fetch('https://api.telegram.org/bot' + token + '/' + method, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    return (j && j.ok) ? j.result : null;
+  } catch { return null; }
+}
 
 // ─────────────────────────── i18n ───────────────────────────
 const LANGS = ['be', 'ru', 'uk', 'en'];
@@ -435,6 +453,44 @@ app.post('/api/tg/webhook', async (req, res) => {
     if (!TG_ADMIN_ID || chatId !== TG_ADMIN_ID) return; // чужим бот не отвечает
     await handlePromoWizard(chatId, msg.text);
   } catch (e) { console.error('tg webhook', e); }
+});
+
+// ── Бот ПОДДЕРЖКИ (отдельный токен): юзер -> пересылка админу -> ответ свайпом -> юзеру ──
+app.get('/api/tg/support', (req, res) => res.json({ ok: true }));
+app.post('/api/tg/support', async (req, res) => {
+  if (SUPPORT_WEBHOOK_SECRET && req.headers['x-telegram-bot-api-secret-token'] !== SUPPORT_WEBHOOK_SECRET) {
+    return res.sendStatus(403);
+  }
+  res.sendStatus(200);
+  try {
+    const msg = req.body && req.body.message;
+    if (!msg || !msg.chat) return;
+    const chatId = String(msg.chat.id);
+
+    // Админ отвечает свайпом на пересланное обращение -> уходит юзеру
+    if (TG_ADMIN_ID && chatId === TG_ADMIN_ID) {
+      const reply = msg.reply_to_message;
+      if (reply && msg.text) {
+        const userChat = await db.getSupportUser(String(reply.message_id));
+        if (userChat) {
+          await tgApi(SUPPORT_BOT_TOKEN, 'sendMessage', { chat_id: userChat, text: '💬 <b>Поддержка:</b>\n' + esc(msg.text), parse_mode: 'HTML' });
+          await tgApi(SUPPORT_BOT_TOKEN, 'sendMessage', { chat_id: chatId, text: '✓ отправлено' });
+        }
+      }
+      return; // в саппорт-боте админ только отвечает, промо-визарда тут нет
+    }
+
+    // Юзер пишет в поддержку -> пересылаем админу («переслано от»), запоминаем тред
+    if (msg.text || msg.caption || msg.photo || msg.document || msg.sticker || msg.voice) {
+      const fwd = await tgApi(SUPPORT_BOT_TOKEN, 'forwardMessage', {
+        chat_id: TG_ADMIN_ID, from_chat_id: chatId, message_id: msg.message_id
+      });
+      if (fwd && fwd.message_id) {
+        await db.setSupportThread(String(fwd.message_id), chatId);
+        await tgApi(SUPPORT_BOT_TOKEN, 'sendMessage', { chat_id: chatId, text: '✅ Сообщение отправлено в поддержку. Ответ придёт сюда.' });
+      }
+    }
+  } catch (e) { console.error('support webhook', e); }
 });
 
 // ── Промокоды ──

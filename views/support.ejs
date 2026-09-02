@@ -11,7 +11,7 @@
     <span class="panel-label"><%= t('support.faq') %></span>
     <div class="support-faq-list">
       <% [1,2,3,4].forEach(function(i){ var open=i===1; %>
-        <div class="faq-item <%= open ? 'is-open' : '' %>
+        <div class="faq-item <%= open ? 'is-open' : '' %>">
           <button class="faq-question" type="button" aria-expanded="<%= open ? 'true' : 'false' %>"><span>0<%= i %></span><b><%= t('support.q' + i) %></b><i aria-hidden="true"></i></button>
           <div class="faq-answer" aria-hidden="<%= open ? 'false' : 'true' %>"><div><p><%= t('support.a' + i) %></p></div></div>
         </div>
@@ -22,7 +22,7 @@
   <aside class="panel-card contact-card">
     <span class="panel-label"><%= t('support.contact_title') %></span>
     <h2><%= t('support.subtitle') %></h2>
-    <a href="<%= contacts.support %>" target="_blank" rel="noopener" class="contact-action"><span>Telegram</span><b><%= contacts.supportName %></b><i>↗</i></a>
+    <a href="<%= contacts.supportBot %>" target="_blank" rel="noopener" class="contact-action"><span>Telegram</span><b><%= t('support.write_bot') %></b><i>↗</i></a>
     <button type="button" class="contact-action copy-contact" data-copy="<%= contacts.discordUser %>"><span>Discord</span><b><%= contacts.discordUser %></b><i>＋</i></button>
     <% if (contacts.email) { %><a href="mailto:<%= contacts.email %>" class="contact-action"><span>Email</span><b><%= contacts.email %></b><i>↗</i></a><% } %>
   </aside>
