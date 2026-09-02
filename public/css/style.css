@@ -3013,3 +3013,37 @@ footer {
   .stat-grid { grid-template-columns:repeat(2,1fr); }
   .mon-grid { grid-template-columns:1fr; }
 }
+
+/* ── Глобальный фон: aurora + звёзды на всех страницах (home сохраняет свой геройский фон) ── */
+.site-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+body.page-home .site-bg { display: none; }
+.sb-glow { position: absolute; border-radius: 50%; filter: blur(90px); mix-blend-mode: screen; }
+.sb-glow-1 {
+  width: 60vw; height: 46vw; min-width: 520px; top: -12vw; right: -8vw;
+  background: radial-gradient(circle, rgba(126,69,241,.22), rgba(96,35,179,.08) 46%, transparent 70%);
+  animation: aurora-breathe 8s ease-in-out infinite alternate;
+}
+.sb-glow-2 {
+  width: 50vw; height: 40vw; min-width: 420px; bottom: -16vw; left: -8vw;
+  background: radial-gradient(circle, rgba(112,56,222,.16), transparent 68%);
+  animation: aurora-breathe 11s ease-in-out 1.4s infinite alternate-reverse;
+}
+.sb-stars {
+  position: absolute; inset: 0; opacity: .4;
+  background-image:
+    radial-gradient(circle at 8% 14%, rgba(220,205,255,.9) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 33% 28%, rgba(151,102,255,.7) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 70% 12%, rgba(255,255,255,.6) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 87% 44%, rgba(151,102,255,.8) 0 1.3px, transparent 1.8px),
+    radial-gradient(circle at 57% 72%, rgba(255,255,255,.45) 0 1px, transparent 1.4px);
+  background-size: 290px 270px, 360px 310px, 420px 390px, 260px 330px, 520px 460px;
+  -webkit-mask-image: radial-gradient(ellipse 92% 82% at 50% 26%, black 42%, transparent 100%);
+  mask-image: radial-gradient(ellipse 92% 82% at 50% 26%, black 42%, transparent 100%);
+  animation: stars-drift 40s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) { .sb-glow, .sb-stars { animation: none; } }
+
+/* ── Иконки в шапке: чистые SVG в стиле «данных аккаунта» ── */
+.header-login .hicon { width: 16px; height: 16px; flex: none; }
+.lang-caret { width: 12px; height: 12px; opacity: .68; transition: transform .2s ease; }
+.lang-btn[aria-expanded="true"] .lang-caret { transform: rotate(180deg); }

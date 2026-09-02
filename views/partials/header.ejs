@@ -18,6 +18,11 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="page-<%= page %>">
+  <div class="site-bg" aria-hidden="true">
+    <span class="sb-glow sb-glow-1"></span>
+    <span class="sb-glow sb-glow-2"></span>
+    <span class="sb-stars"></span>
+  </div>
   <div class="page-noise" aria-hidden="true"></div>
 
   <header class="site-header">
@@ -38,7 +43,7 @@
       <div class="header-actions">
         <div class="lang">
           <button class="lang-btn" type="button" aria-haspopup="true" aria-expanded="false">
-            <span><%= lang.toUpperCase() %></span><i aria-hidden="true"></i>
+            <span><%= lang.toUpperCase() %></span><svg class="lang-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div class="lang-menu">
             <% langs.forEach(function(l){ %>
@@ -51,7 +56,7 @@
 
         <% if (user) { %>
           <a href="/account" class="header-login is-active" title="<%= t('nav.account') %>">
-            <% if (user.avatar) { %><img class="header-user-avatar" src="<%= user.avatar %>" alt=""><% } else { %><i aria-hidden="true"></i><% } %>
+            <% if (user.avatar) { %><img class="header-user-avatar" src="<%= user.avatar %>" alt=""><% } else { %><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><% } %>
             <span><%= user.username %></span>
           </a>
           <% if (isAdmin) { %><a href="/admin" class="admin-link" aria-label="Admin">A</a><% } %>
@@ -59,7 +64,7 @@
             <button type="submit" aria-label="<%= t('nav.logout') %>" title="<%= t('nav.logout') %>">↗</button>
           </form>
         <% } else { %>
-          <a class="header-login" href="/login"><i aria-hidden="true"></i><span><%= t('nav.login') %></span></a>
+          <a class="header-login" href="/login"><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span><%= t('nav.login') %></span></a>
           <a class="header-cta magnetic" href="/register"><%= t('nav.register') %><span aria-hidden="true">↗</span></a>
         <% } %>
 
