@@ -87,7 +87,7 @@
   <!-- действия -->
   <div class="prof-actions">
     <a href="#" class="btn btn-ghost act-btn"><%= t('account.btn_download') %></a>
-    <form action="/account/soon" method="post"><button class="btn btn-ghost act-btn"><%= t('account.btn_key') %></button></form>
+    <button type="button" class="btn btn-ghost act-btn" id="keyToggle"><%= t('account.btn_key') %></button>
     <button type="button" class="btn btn-ghost act-btn" id="passToggle"><%= t('account.btn_pass') %></button>
     <form action="/account/hwid/reset" method="post"><button class="btn btn-ghost act-btn" <%= ((account.hwidResets||0) < 1 || !account.hwid) ? 'disabled' : '' %>><%= t('account.btn_hwid') %> (<%= account.hwidResets || 0 %>)</button></form>
     <% if (account.frozen) { %>
@@ -96,6 +96,18 @@
       <form action="/account/freeze" method="post"><button class="btn btn-ghost act-btn" <%= (account.freezes||0) < 1 ? 'disabled' : '' %>><%= t('account.btn_freeze') %> (<%= account.freezes || 0 %>)</button></form>
     <% } %>
     <form action="/account/soon" method="post"><button class="btn btn-ghost act-btn"><%= t('account.btn_2fa') %></button></form>
+  </div>
+
+  <!-- активация ключа (скрытая форма) -->
+  <div class="panel pass-panel" id="keyPanel" style="display:none">
+    <h3 class="panel-h"><%= t('account.key_title') %></h3>
+    <form action="/account/key" method="post" class="form">
+      <label class="field"><span><%= t('account.key_label') %></span><input type="text" name="code" autocomplete="off" required maxlength="64" placeholder="XXXXXXX"></label>
+      <div class="row-gap">
+        <button type="submit" class="btn btn-primary"><%= t('account.key_activate') %></button>
+        <button type="button" class="btn btn-ghost" id="keyCancel"><%= t('account.cancel') %></button>
+      </div>
+    </form>
   </div>
 
   <!-- смена пароля (скрытая форма) -->
@@ -117,6 +129,9 @@
   var pt = document.getElementById('passToggle'), pp = document.getElementById('passPanel'), pc = document.getElementById('passCancel');
   if (pt) pt.addEventListener('click', function(){ pp.style.display = pp.style.display==='none'?'block':'none'; pp.scrollIntoView({behavior:'smooth',block:'center'}); });
   if (pc) pc.addEventListener('click', function(){ pp.style.display='none'; });
+  var kt = document.getElementById('keyToggle'), kp = document.getElementById('keyPanel'), kc = document.getElementById('keyCancel');
+  if (kt) kt.addEventListener('click', function(){ kp.style.display = kp.style.display==='none'?'block':'none'; kp.scrollIntoView({behavior:'smooth',block:'center'}); });
+  if (kc) kc.addEventListener('click', function(){ kp.style.display='none'; });
 </script>
 
 <%- include('partials/footer') %>

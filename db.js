@@ -91,6 +91,11 @@ async function initPg() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
+  // тип промика: 'days' (ключ на подписку) или 'discount' (скидка %)
+  await pg.query(`
+    ALTER TABLE promos ADD COLUMN IF NOT EXISTS kind    TEXT DEFAULT 'days';
+    ALTER TABLE promos ADD COLUMN IF NOT EXISTS percent INTEGER DEFAULT 0;
+  `);
 }
 function rowUser(r) {
   if (!r) return null;
@@ -199,21 +204,21 @@ const pgApi = {
   // ── промокоды ──
   async createPromo(p) {
     await pg.query(
-      'INSERT INTO promos (code, days, forever, max_uses, uses, target) VALUES ($1,$2,$3,$4,0,$5)',
-      [p.code, p.days, !!p.forever, p.maxUses || 0, p.target || '']);
+      'INSERT INTO promos (code, kind, days, forever, percent, max_uses, uses, target) VALUES ($1,$2,$3,$4,$5,$6,0,$7)',
+      [p.code, p.kind || 'days', p.days, !!p.forever, p.percent || 0, p.maxUses || 0, p.target || '']);
     return p;
   },
   async getPromo(code) {
     const { rows } = await pg.query('SELECT * FROM promos WHERE LOWER(code)=LOWER($1)', [code]);
     const r = rows[0];
-    return r ? { code: r.code, days: r.days, forever: !!r.forever, maxUses: r.max_uses,
-      uses: r.uses, target: r.target || '' } : null;
+    return r ? { code: r.code, kind: r.kind || 'days', days: r.days, forever: !!r.forever,
+      percent: r.percent || 0, maxUses: r.max_uses, uses: r.uses, target: r.target || '' } : null;
   },
   async incPromoUses(code) { await pg.query('UPDATE promos SET uses=uses+1 WHERE LOWER(code)=LOWER($1)', [code]); },
   async listPromos(limit = 50) {
     const { rows } = await pg.query('SELECT * FROM promos ORDER BY created_at DESC LIMIT $1', [limit]);
-    return rows.map(r => ({ code: r.code, days: r.days, forever: !!r.forever, maxUses: r.max_uses,
-      uses: r.uses, target: r.target || '' }));
+    return rows.map(r => ({ code: r.code, kind: r.kind || 'days', days: r.days, forever: !!r.forever,
+      percent: r.percent || 0, maxUses: r.max_uses, uses: r.uses, target: r.target || '' }));
   },
   async hasRedeemed(code, userId) {
     const { rows } = await pg.query('SELECT 1 FROM promo_redemptions WHERE LOWER(code)=LOWER($1) AND user_id=$2', [code, userId]);
@@ -334,8 +339,9 @@ const fileApi = {
   // ── промокоды ──
   async createPromo(p) {
     const list = readJSON(PROMOS_FILE);
-    list.push({ code: p.code, days: p.days, forever: !!p.forever, maxUses: p.maxUses || 0,
-      uses: 0, target: p.target || '', createdAt: new Date().toISOString() });
+    list.push({ code: p.code, kind: p.kind || 'days', days: p.days, forever: !!p.forever,
+      percent: p.percent || 0, maxUses: p.maxUses || 0, uses: 0, target: p.target || '',
+      createdAt: new Date().toISOString() });
     writeJSON(PROMOS_FILE, list);
     return p;
   },

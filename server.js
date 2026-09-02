@@ -34,7 +34,7 @@ function safeMemoryUsage() {
 
 // ─────────────── Заморозка покупок ───────────────
 // Пока true — покупки/триал недоступны (только предзаказ), и выданные дни НЕ тратятся.
-const FROZEN = (process.env.PURCHASES_FROZEN || 'true') === 'true';
+const FROZEN = (process.env.PURCHASES_FROZEN || 'false') === 'true';
 const FROZEN_AT = new Date(process.env.FROZEN_AT || '2026-06-26T00:00:00Z'); // момент заморозки
 function effectiveNow() { return FROZEN ? new Date(FROZEN_AT) : new Date(); }
 
@@ -183,7 +183,7 @@ async function handlePromoWizard(chatId, text) {
   if (t === '/cancel') { await db.clearBotState(chatId); return tgSend(chatId, 'Отменено.'); }
   if (/^\/promo(@\w+)?$/i.test(t)) {
     await db.setBotState(chatId, { step: 'name', data: {} });
-    return tgSend(chatId, '🎟 <b>Новый промокод</b> — шаг 1/4.\nУкажи <b>название</b> (или <code>.</code> — сгенерирую):');
+    return tgSend(chatId, '🎟 <b>Новый промокод</b> — шаг 1/5.\nУкажи <b>название</b> (или <code>.</code> — сгенерирую):');
   }
   const st = await db.getBotState(chatId);
   if (!st) return tgSend(chatId, 'Команды: /promo — создать промокод, /cancel — отмена.');
@@ -191,29 +191,49 @@ async function handlePromoWizard(chatId, text) {
   if (st.step === 'name') {
     d.code = (t === '.' || !t) ? genPromoCode() : t.replace(/\s+/g, '');
     if (await db.getPromo(d.code)) { await db.clearBotState(chatId); return tgSend(chatId, 'Код <code>' + esc(d.code) + '</code> уже есть. Начни заново: /promo'); }
+    await db.setBotState(chatId, { step: 'kind', data: d });
+    return tgSend(chatId, 'Шаг 2/5. Промик на <b>скидку</b> или на <b>дни</b>?\nНапиши <code>скидка</code> или <code>дни</code>:');
+  }
+  if (st.step === 'kind') {
+    const v = t.toLowerCase();
+    if (v.startsWith('скид') || v === 'discount' || v === '1') d.kind = 'discount';
+    else if (v.startsWith('дн') || v === 'days' || v === '2') d.kind = 'days';
+    else return tgSend(chatId, 'Напиши <code>скидка</code> или <code>дни</code>.');
+    if (d.kind === 'discount') {
+      await db.setBotState(chatId, { step: 'percent', data: d });
+      return tgSend(chatId, 'Шаг 3/5. <b>Процент скидки</b> (1–100):');
+    }
     await db.setBotState(chatId, { step: 'period', data: d });
-    return tgSend(chatId, 'Шаг 2/4. <b>Период</b> в днях (число, <code>404</code> или <code>.</code> = навсегда):');
+    return tgSend(chatId, 'Шаг 3/5. <b>Период</b> в днях (число, <code>404</code> или <code>.</code> = навсегда):');
+  }
+  if (st.step === 'percent') {
+    const n = parseInt(t, 10);
+    if (isNaN(n) || n < 1 || n > 100) return tgSend(chatId, 'Нужен процент 1–100.');
+    d.percent = n;
+    await db.setBotState(chatId, { step: 'uses', data: d });
+    return tgSend(chatId, 'Шаг 4/5. <b>Кол-во активаций</b> (число, <code>404</code> или <code>.</code> = безлимит):');
   }
   if (st.step === 'period') {
     if (t === '.' || t === '404') { d.forever = true; d.days = null; }
     else { const n = parseInt(t, 10); if (isNaN(n) || n < 1) return tgSend(chatId, 'Нужно число дней, или <code>404</code>/<code>.</code> = навсегда.'); d.forever = false; d.days = n; }
     await db.setBotState(chatId, { step: 'uses', data: d });
-    return tgSend(chatId, 'Шаг 3/4. <b>Кол-во активаций</b> (число, <code>404</code> или <code>.</code> = безлимит):');
+    return tgSend(chatId, 'Шаг 4/5. <b>Кол-во активаций</b> (число, <code>404</code> или <code>.</code> = безлимит):');
   }
   if (st.step === 'uses') {
     if (t === '.' || t === '404') d.maxUses = 0;
     else { const n = parseInt(t, 10); if (isNaN(n) || n < 1) return tgSend(chatId, 'Нужно число активаций, или <code>404</code>/<code>.</code> = безлимит.'); d.maxUses = n; }
     await db.setBotState(chatId, { step: 'target', data: d });
-    return tgSend(chatId, 'Шаг 4/4. <b>Ник</b> кому выдать (<code>.</code> = для всех):');
+    return tgSend(chatId, 'Шаг 5/5. <b>Ник</b> кому выдать (<code>.</code> = для всех):');
   }
   if (st.step === 'target') {
     d.target = (t === '.' || !t) ? '' : t.toLowerCase();
-    await db.createPromo({ code: d.code, days: d.days, forever: d.forever, maxUses: d.maxUses, target: d.target });
+    await db.createPromo({ code: d.code, kind: d.kind, days: d.days, forever: d.forever, percent: d.percent, maxUses: d.maxUses, target: d.target });
     await db.clearBotState(chatId);
-    const grant = d.forever ? 'навсегда' : (d.days + ' дн.');
+    const what = d.kind === 'discount' ? ('скидка ' + d.percent + '%') : (d.forever ? 'навсегда' : (d.days + ' дн.'));
     const uses = d.maxUses ? (d.maxUses + ' активаций') : 'безлимит';
     const who = d.target ? ('@' + esc(d.target)) : 'для всех';
-    return tgSend(chatId, '✅ <b>Промокод создан</b>\nКод: <code>' + esc(d.code) + '</code>\nВыдаёт: ' + grant + '\nАктиваций: ' + uses + '\nКому: ' + who);
+    const where = d.kind === 'discount' ? 'на странице «Купить»' : 'в профиле → «Активировать ключ»';
+    return tgSend(chatId, '✅ <b>Промокод создан</b>\nКод: <code>' + esc(d.code) + '</code>\nТип: ' + what + '\nАктиваций: ' + uses + '\nКому: ' + who + '\nАктивируют: ' + where);
   }
   await db.clearBotState(chatId);
   return tgSend(chatId, 'Сбой шага. Начни заново: /promo');
@@ -417,20 +437,42 @@ app.post('/api/tg/webhook', async (req, res) => {
   } catch (e) { console.error('tg webhook', e); }
 });
 
-// ── Промокоды на сайте ──
-app.get('/promo', (req, res) => res.render('promo', { page: 'promo' }));
-app.post('/promo', requireAuth, async (req, res, next) => {
+// ── Промокоды ──
+// Отдельная страница убрана: скидочные активируются на «Купить», ключи (на дни) — в
+// профиле. /promo оставлен редиректом на /buy для старых ссылок.
+app.get('/promo', (req, res) => res.redirect('/buy'));
+
+// Применить СКИДОЧНЫЙ промокод к текущей покупке (живёт в сессии до оплаты).
+app.post('/buy/promo', requireAuth, async (req, res, next) => {
   try {
     const code = String(req.body.code || '').trim();
     const user = await db.findById(req.session.userId);
     const p = code ? await db.getPromo(code) : null;
-    if (!p) { flash(req, 'error', 'promo.err_notfound'); return res.redirect('/promo'); }
-    if (p.target && p.target.toLowerCase() !== String(user.username).toLowerCase()) {
-      flash(req, 'error', 'promo.err_target'); return res.redirect('/promo');
-    }
-    if (p.maxUses > 0 && p.uses >= p.maxUses) { flash(req, 'error', 'promo.err_used_up'); return res.redirect('/promo'); }
-    if (await db.hasRedeemed(p.code, user.id)) { flash(req, 'error', 'promo.err_already'); return res.redirect('/promo'); }
-    await applySub(user.id, 'promo_' + p.code, p.forever ? null : p.days);
+    if (!p || p.kind !== 'discount') { flash(req, 'error', 'promo.err_notfound'); return res.redirect('/buy'); }
+    if (p.target && p.target.toLowerCase() !== String(user.username).toLowerCase()) { flash(req, 'error', 'promo.err_target'); return res.redirect('/buy'); }
+    if (p.maxUses > 0 && p.uses >= p.maxUses) { flash(req, 'error', 'promo.err_used_up'); return res.redirect('/buy'); }
+    if (await db.hasRedeemed(p.code, user.id)) { flash(req, 'error', 'promo.err_already'); return res.redirect('/buy'); }
+    req.session.buyPromo = { code: p.code, percent: p.percent };
+    flash(req, 'success', 'promo.applied');
+    res.redirect('/buy');
+  } catch (e) { next(e); }
+});
+app.post('/buy/promo/remove', requireAuth, (req, res) => {
+  req.session.buyPromo = null;
+  res.redirect('/buy');
+});
+
+// Активировать КЛЮЧ (промик на дни) в профиле.
+app.post('/account/key', requireAuth, async (req, res, next) => {
+  try {
+    const code = String(req.body.code || '').trim();
+    const user = await db.findById(req.session.userId);
+    const p = code ? await db.getPromo(code) : null;
+    if (!p || p.kind !== 'days') { flash(req, 'error', 'promo.err_notfound'); return res.redirect('/account'); }
+    if (p.target && p.target.toLowerCase() !== String(user.username).toLowerCase()) { flash(req, 'error', 'promo.err_target'); return res.redirect('/account'); }
+    if (p.maxUses > 0 && p.uses >= p.maxUses) { flash(req, 'error', 'promo.err_used_up'); return res.redirect('/account'); }
+    if (await db.hasRedeemed(p.code, user.id)) { flash(req, 'error', 'promo.err_already'); return res.redirect('/account'); }
+    await applySub(user.id, 'key_' + p.code, p.forever ? null : p.days);
     await db.addRedemption(p.code, user.id);
     await db.incPromoUses(p.code);
     flash(req, 'success', 'promo.ok');
@@ -447,8 +489,11 @@ app.get('/buy', async (req, res, next) => {
       const orders = await db.getOrdersByUser(req.session.userId);
       trialUsed = orders.some(o => String(o.plan).startsWith('trial'));
     }
+    const bp = req.session.buyPromo || null;
+    const autoPct = res.locals.discPct || 0;
+    const planPct = bp ? Math.max(autoPct, bp.percent) : autoPct; // скидка на тарифы с учётом промика
     res.render('buy', { page: 'buy', plan: PLANS[planId], trialPrices: TRIAL_PRICES, trialUsed,
-      freezePrice: FREEZE_PRICE, hwidPrice: HWID_RESET_PRICE });
+      freezePrice: FREEZE_PRICE, hwidPrice: HWID_RESET_PRICE, appliedPromo: bp, planPct });
   } catch (e) { next(e); }
 });
 
@@ -457,10 +502,26 @@ app.post('/buy', requireAuth, async (req, res, next) => {
     if (FROZEN) { flash(req, 'error', 'buy.frozen_flash'); return res.redirect('/buy'); }
     // бета теперь отдельный продукт (lifetime_beta), выбирается как обычный тариф
     const plan = PLANS[req.body.plan] || PLANS.lifetime;
-    const price = applyDiscount(plan.price, await db.findById(req.session.userId)).final;
-    await db.createOrder({ userId: req.session.userId, plan: plan.id, price, currency: plan.currency });
-    await applySub(req.session.userId, plan.id, planDays(plan.id));
-    await grantGifts(req.session.userId, plan.id); // подарки: заморозки / сбросы HWID
+    const user = await db.findById(req.session.userId);
+    // скидка = авто (10/13%) или промик, что больше; промик валидируем заново и гасим
+    let eff = discountPercent(user);
+    let promoUsed = null;
+    const bp = req.session.buyPromo;
+    if (bp) {
+      const p = await db.getPromo(bp.code);
+      const okTarget = !p || !p.target || p.target.toLowerCase() === String(user.username).toLowerCase();
+      const okUses = p && !(p.maxUses > 0 && p.uses >= p.maxUses);
+      if (p && p.kind === 'discount' && okTarget && okUses && !(await db.hasRedeemed(p.code, user.id))) {
+        eff = Math.max(eff, p.percent);
+        promoUsed = p.code;
+      }
+    }
+    const price = Math.round(plan.price * (100 - eff) / 100);
+    await db.createOrder({ userId: user.id, plan: plan.id, price, currency: plan.currency });
+    await applySub(user.id, plan.id, planDays(plan.id));
+    await grantGifts(user.id, plan.id); // подарки: заморозки / сбросы HWID
+    if (promoUsed) { await db.addRedemption(promoUsed, user.id); await db.incPromoUses(promoUsed); }
+    req.session.buyPromo = null;
     flash(req, 'success', 'buy.order_created');
     res.redirect('/account');
   } catch (e) { next(e); }

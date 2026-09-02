@@ -20,7 +20,7 @@ services:
       - key: ADMIN_EMAILS
         sync: false
       - key: PURCHASES_FROZEN
-        value: "true"
+        value: "false"
       # Telegram-уведомления о запусках лаунчера (без IP). Секреты — только здесь.
       - key: TG_BOT_TOKEN
         sync: false

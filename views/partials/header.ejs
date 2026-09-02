@@ -35,7 +35,6 @@
       <nav class="desktop-nav" aria-label="Main navigation">
         <a href="/" class="<%= page==='home' ? 'active' : '' %>"><%= t('nav.home') %></a>
         <a href="/buy" class="<%= page==='buy' ? 'active' : '' %>"><%= t('nav.buy') %></a>
-        <a href="/promo" class="<%= page==='promo' ? 'active' : '' %>"><%= t('nav.promo') %></a>
         <a href="/docs/terms" class="<%= page==='docs' ? 'active' : '' %>"><%= t('nav.docs') %></a>
         <a href="/support" class="<%= page==='support' ? 'active' : '' %>"><%= t('nav.support') %></a>
       </nav>
@@ -74,7 +73,6 @@
     <nav class="mobile-nav" aria-label="Mobile navigation">
       <a href="/"><%= t('nav.home') %></a>
       <a href="/buy"><%= t('nav.buy') %></a>
-      <a href="/promo"><%= t('nav.promo') %></a>
       <a href="/docs/terms"><%= t('nav.docs') %></a>
       <a href="/support"><%= t('nav.support') %></a>
       <% if (user) { %><a href="/account"><%= t('nav.account') %></a><% } else { %><a href="/login"><%= t('nav.login') %></a><% } %>

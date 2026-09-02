@@ -100,7 +100,11 @@
     "item_hwid_desc": "Unlink the current PC to log in from a new one. 1 purchase = 1 reset.",
     "buy_item": "Buy",
     "item_bought": "Purchased. Check your account.",
-    "discount": "Discount"
+    "discount": "Discount",
+    "promo_apply": "Apply",
+    "promo_ph": "Discount promo code",
+    "promo_on": "Promo",
+    "promo_remove": "remove"
   },
   "auth": {
     "login_title": "Log in to your account",
@@ -170,7 +174,10 @@
     "no_hwid_reset": "No HWID resets — buy one in the store.",
     "hwid_none_flash": "HWID is not linked — nothing to reset.",
     "frozen_ok": "Subscription frozen.",
-    "unfrozen_ok": "Subscription unfrozen."
+    "unfrozen_ok": "Subscription unfrozen.",
+    "key_title": "Activate key",
+    "key_label": "Key",
+    "key_activate": "Activate"
   },
   "support": {
     "title": "Support",
@@ -228,6 +235,7 @@
     "err_notfound": "Promo code not found.",
     "err_target": "This promo code is not for your account.",
     "err_used_up": "Promo code is used up.",
-    "err_already": "You have already redeemed this promo code."
+    "err_already": "You have already redeemed this promo code.",
+    "applied": "Promo code applied."
   }
 }

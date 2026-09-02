@@ -53,16 +53,33 @@
   <!-- ───── Полный доступ ───── -->
   <h3 class="plans-heading"><%= t('buy.plans_heading') %></h3>
 
+  <% if (user && !frozen) { %>
+    <div class="panel" style="margin-bottom:16px">
+      <% if (appliedPromo) { %>
+        <div class="notice" style="display:flex;align-items:center;gap:12px;justify-content:space-between;margin:0">
+          <span><%= t('buy.promo_on') %> <b><%= appliedPromo.code %></b> — −<%= appliedPromo.percent %>%</span>
+          <form action="/buy/promo/remove" method="post" style="margin:0"><button type="submit" class="btn-mini ghost"><%= t('buy.promo_remove') %></button></form>
+        </div>
+      <% } else { %>
+        <form action="/buy/promo" method="post" style="display:flex;gap:10px;align-items:center;margin:0">
+          <input type="text" name="code" maxlength="64" autocomplete="off" placeholder="<%= t('buy.promo_ph') %>"
+                 style="flex:1;min-width:0;height:46px;padding:0 15px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit">
+          <button type="submit" class="btn btn-ghost" style="white-space:nowrap"><%= t('buy.promo_apply') %></button>
+        </form>
+      <% } %>
+    </div>
+  <% } %>
+
   <form action="/buy" method="post">
     <div class="checkout">
       <div class="checkout-main panel">
         <h3 class="panel-h"><%= t('buy.choose_plan') %></h3>
         <div class="plan-picker">
-          <% ['month','season','halfyear','lifetime','lifetime_beta'].forEach(function(id){ var p = plans[id]; var pv = priceView(p.price); %>
-            <label class="plan-opt <%= id===plan.id ? 'sel' : '' %>" data-price="<%= pv.final %>" data-name="<%= t('pricing.'+id+'_t') %>" data-id="<%= id %>">
+          <% ['month','season','halfyear','lifetime','lifetime_beta'].forEach(function(id){ var p = plans[id]; var fin = Math.round(p.price*(100-planPct)/100); %>
+            <label class="plan-opt <%= id===plan.id ? 'sel' : '' %>" data-price="<%= fin %>" data-name="<%= t('pricing.'+id+'_t') %>" data-id="<%= id %>">
               <input type="radio" name="plan" value="<%= id %>" <%= id===plan.id ? 'checked' : '' %>>
               <span class="po-name"><%= t('pricing.'+id+'_t') %></span>
-              <span class="po-price"><%= pv.final %> ₽<% if (pv.pct) { %> <s style="opacity:.5"><%= pv.base %></s><% } %></span>
+              <span class="po-price"><%= fin %> ₽<% if (planPct) { %> <s style="opacity:.5"><%= p.price %></s><% } %></span>
             </label>
           <% }); %>
         </div>
@@ -83,10 +100,10 @@
 
       <aside class="checkout-side panel">
         <h3 class="panel-h"><%= t('buy.summary') %></h3>
-        <% var pvSel = priceView(plan.price); %>
-        <div class="sum-row"><span id="sumName"><%= t('pricing.'+plan.id+'_t') %></span><span id="sumBase"><%= pvSel.final %> ₽</span></div>
-        <% if (discPct) { %><div class="sum-row muted small"><span><%= t('buy.discount') %></span><span>−<%= discPct %>%</span></div><% } %>
-        <div class="sum-total"><span><%= t('buy.summary') %></span><strong id="sumTotal"><%= pvSel.final %> ₽</strong></div>
+        <% var selFin = Math.round(plan.price*(100-planPct)/100); %>
+        <div class="sum-row"><span id="sumName"><%= t('pricing.'+plan.id+'_t') %></span><span id="sumBase"><%= selFin %> ₽</span></div>
+        <% if (planPct) { %><div class="sum-row muted small"><span><%= t('buy.discount') %><% if (appliedPromo) { %> · <%= appliedPromo.code %><% } %></span><span>−<%= planPct %>%</span></div><% } %>
+        <div class="sum-total"><span><%= t('buy.summary') %></span><strong id="sumTotal"><%= selFin %> ₽</strong></div>
       </aside>
     </div>
   </form>
