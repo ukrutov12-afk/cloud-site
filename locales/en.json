@@ -238,5 +238,21 @@
     "err_used_up": "Promo code is used up.",
     "err_already": "You have already redeemed this promo code.",
     "applied": "Promo code applied."
+  },
+  "twofa": {
+    "title": "Two-factor authentication",
+    "setup_desc": "Scan the QR in Google Authenticator (or Authy) and enter the 6-digit code to confirm.",
+    "manual": "Or enter the key manually:",
+    "code": "Code from the app",
+    "enable": "Enable 2FA",
+    "disable": "Disable 2FA",
+    "on_desc": "2FA is on. To disable, enter a code from the app.",
+    "enabled": "2FA enabled.",
+    "disabled": "2FA disabled.",
+    "err_code": "Wrong code. Try again.",
+    "login_title": "Confirm sign-in",
+    "login_desc": "Enter the 6-digit code from Google Authenticator.",
+    "verify": "Confirm",
+    "manage": "Manage 2FA"
   }
 }

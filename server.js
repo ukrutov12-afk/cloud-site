@@ -10,6 +10,8 @@ const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const Jimp = require('jimp');
+const crypto = require('crypto');
+const QRCode = require('qrcode');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
 const db = require('./db');
 
@@ -351,6 +353,45 @@ async function requireAdmin(req, res, next) {
 }
 const isEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || ''));
 
+// ─────────── 2FA: TOTP (Google Authenticator), RFC 6238, без внешних сервисов ───────────
+const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function genTotpSecret() {
+  const buf = crypto.randomBytes(20);
+  let bits = '', out = '';
+  for (const b of buf) bits += b.toString(2).padStart(8, '0');
+  for (let i = 0; i + 5 <= bits.length; i += 5) out += B32[parseInt(bits.slice(i, i + 5), 2)];
+  return out;
+}
+function b32decode(s) {
+  s = String(s).toUpperCase().replace(/[^A-Z2-7]/g, '');
+  let bits = '';
+  for (const c of s) bits += B32.indexOf(c).toString(2).padStart(5, '0');
+  const bytes = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8) bytes.push(parseInt(bits.slice(i, i + 8), 2));
+  return Buffer.from(bytes);
+}
+function totpAt(secret, counter) {
+  const key = b32decode(secret);
+  const buf = Buffer.alloc(8);
+  buf.writeBigUInt64BE(BigInt(counter));
+  const h = crypto.createHmac('sha1', key).update(buf).digest();
+  const off = h[h.length - 1] & 0x0f;
+  const code = ((h[off] & 0x7f) << 24 | (h[off + 1] & 0xff) << 16 | (h[off + 2] & 0xff) << 8 | (h[off + 3] & 0xff)) % 1000000;
+  return code.toString().padStart(6, '0');
+}
+function totpVerify(secret, token) {
+  if (!secret || !token) return false;
+  token = String(token).replace(/\D/g, '');
+  if (token.length !== 6) return false;
+  const counter = Math.floor(Date.now() / 1000 / 30);
+  for (let w = -1; w <= 1; w++) if (totpAt(secret, counter + w) === token) return true;
+  return false;
+}
+function otpauthUrl(secret, label) {
+  return 'otpauth://totp/Zephyr:' + encodeURIComponent(label) +
+    '?secret=' + secret + '&issuer=Zephyr&digits=6&period=30';
+}
+
 // ─────────── Хелперы аккаунта (для лаунчера и админки) ───────────
 const BAN_FOREVER_YEAR = 9999;
 // UID: из БД или стабильно выводим из id (как на странице аккаунта)
@@ -681,6 +722,32 @@ app.post('/login', async (req, res, next) => {
       rerr(res, 'flash.err_creds');
       return res.render('login', { page: 'login', form });
     }
+    if (user.totpEnabled && user.totpSecret) {
+      req.session.pending2fa = user.id; // пароль ок, ждём код 2FA
+      return res.redirect('/login/2fa');
+    }
+    req.session.userId = user.id;
+    flash(req, 'success', 'flash.logged_in');
+    res.redirect('/account');
+  } catch (e) { next(e); }
+});
+
+// второй шаг входа — код 2FA
+app.get('/login/2fa', (req, res) => {
+  if (!req.session.pending2fa) return res.redirect('/login');
+  res.render('twofa_login', { page: 'login' });
+});
+app.post('/login/2fa', async (req, res, next) => {
+  try {
+    const uid = req.session.pending2fa;
+    if (!uid) return res.redirect('/login');
+    const user = await db.findById(uid);
+    if (!user || !user.totpEnabled) { req.session.pending2fa = null; return res.redirect('/login'); }
+    if (!totpVerify(user.totpSecret, req.body.code)) {
+      rerr(res, 'twofa.err_code');
+      return res.render('twofa_login', { page: 'login' });
+    }
+    req.session.pending2fa = null;
     req.session.userId = user.id;
     flash(req, 'success', 'flash.logged_in');
     res.redirect('/account');
@@ -792,6 +859,40 @@ app.post('/account/unfreeze', requireAuth, async (req, res, next) => {
 app.post('/account/soon', requireAuth, (req, res) => {
   flash(req, 'error', 'account.soon');
   res.redirect('/account');
+});
+
+// ── 2FA (Google Authenticator / TOTP) ──
+app.get('/account/2fa', requireAuth, async (req, res, next) => {
+  try {
+    const user = await db.findById(req.session.userId);
+    if (user.totpEnabled) return res.render('twofa', { page: 'account', enabled: true, qr: null, secret: null });
+    let secret = req.session.pending2fa_secret;
+    if (!secret) { secret = genTotpSecret(); req.session.pending2fa_secret = secret; }
+    const qr = await QRCode.toDataURL(otpauthUrl(secret, user.email), { margin: 1, width: 220 });
+    res.render('twofa', { page: 'account', enabled: false, qr, secret });
+  } catch (e) { next(e); }
+});
+app.post('/account/2fa/enable', requireAuth, async (req, res, next) => {
+  try {
+    const user = await db.findById(req.session.userId);
+    const secret = req.session.pending2fa_secret;
+    if (user.totpEnabled) return res.redirect('/account');
+    if (!secret || !totpVerify(secret, req.body.code)) { flash(req, 'error', 'twofa.err_code'); return res.redirect('/account/2fa'); }
+    await db.updateUser(user.id, { totpSecret: secret, totpEnabled: true });
+    req.session.pending2fa_secret = null;
+    flash(req, 'success', 'twofa.enabled');
+    res.redirect('/account');
+  } catch (e) { next(e); }
+});
+app.post('/account/2fa/disable', requireAuth, async (req, res, next) => {
+  try {
+    const user = await db.findById(req.session.userId);
+    if (!user.totpEnabled) return res.redirect('/account');
+    if (!totpVerify(user.totpSecret, req.body.code)) { flash(req, 'error', 'twofa.err_code'); return res.redirect('/account/2fa'); }
+    await db.updateUser(user.id, { totpSecret: null, totpEnabled: false });
+    flash(req, 'success', 'twofa.disabled');
+    res.redirect('/account');
+  } catch (e) { next(e); }
 });
 
 // ───────────────────────── Админ-панель ─────────────────────────

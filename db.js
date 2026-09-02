@@ -53,6 +53,8 @@ async function initPg() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS hwid_resets INTEGER DEFAULT 0;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS frozen      BOOLEAN DEFAULT false;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS frozen_days INTEGER DEFAULT 0;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret  TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN DEFAULT false;
   `);
   // Лаунчер: сессии (токен на запуск) и статистика запусков.
   // В launches СОЗНАТЕЛЬНО нет колонки ip — только аккаунт, HWID, время.
@@ -116,13 +118,15 @@ function rowUser(r) {
     hwidResets: r.hwid_resets || 0,
     frozen: !!r.frozen,
     frozenDays: r.frozen_days || 0,
+    totpSecret: r.totp_secret || null,
+    totpEnabled: !!r.totp_enabled,
     createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at
   };
 }
 const USER_COLS = { plan: 'plan', hwid: 'hwid', uid: 'uid', passwordHash: 'password_hash',
   subPlan: 'sub_plan', subUntil: 'sub_until', subForever: 'sub_forever', avatar: 'avatar',
   bannedUntil: 'banned_until', freezes: 'freezes', hwidResets: 'hwid_resets',
-  frozen: 'frozen', frozenDays: 'frozen_days' };
+  frozen: 'frozen', frozenDays: 'frozen_days', totpSecret: 'totp_secret', totpEnabled: 'totp_enabled' };
 function rowOrder(r) {
   return r && {
     id: r.id, userId: r.user_id, plan: r.plan, price: Number(r.price), currency: r.currency,
@@ -298,7 +302,7 @@ const fileApi = {
       passwordHash, plan: null, uid: 10000 + Math.floor(Math.random() * 89999),
       hwid: null, avatar: null, subPlan: null, subUntil: null, subForever: false,
       bannedUntil: null, freezes: 0, hwidResets: 0, frozen: false, frozenDays: 0,
-      createdAt: new Date().toISOString()
+      totpSecret: null, totpEnabled: false, createdAt: new Date().toISOString()
     };
     users.push(user); writeJSON(USERS_FILE, users);
     return user;

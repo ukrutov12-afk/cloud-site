@@ -95,7 +95,7 @@
     <% } else { %>
       <form action="/account/freeze" method="post"><button class="btn btn-ghost act-btn" <%= (account.freezes||0) < 1 ? 'disabled' : '' %>><%= t('account.btn_freeze') %> (<%= account.freezes || 0 %>)</button></form>
     <% } %>
-    <form action="/account/soon" method="post"><button class="btn btn-ghost act-btn"><%= t('account.btn_2fa') %></button></form>
+    <a href="/account/2fa" class="btn btn-ghost act-btn"><%= account.totpEnabled ? t('twofa.manage') : t('account.btn_2fa') %></a>
   </div>
 
   <!-- активация ключа (скрытая форма) -->
