@@ -33,7 +33,7 @@
     <h3 class="panel-h">Пользователи (<%= users.length %> последних)</h3>
     <div class="tbl-wrap">
       <table class="admin-tbl">
-        <thead><tr><th>Username</th><th>Email</th><th>Регистрация</th><th>Подписка</th><th>Роль</th><th>Выдать / удалить</th></tr></thead>
+        <thead><tr><th>Username</th><th>Email</th><th>HWID</th><th>Подписка</th><th>Статус</th><th>Роль</th><th>Действия</th></tr></thead>
         <tbody>
           <% users.forEach(function(u){ %>
             <%
@@ -42,11 +42,16 @@
               else if (u.subForever) subTxt = '∞';
               else if (u.subUntil) { var dl = Math.max(0, Math.ceil((new Date(u.subUntil)-new Date())/86400000)); subTxt = dl + ' дн.'; }
             %>
+            <% var banned = isBannedFn(u);
+               var banTxt = '';
+               if (banned) { var bu = new Date(u.bannedUntil); banTxt = bu.getUTCFullYear() >= 9999 ? 'навсегда' : ('до ' + bu.toISOString().slice(0,10)); }
+            %>
             <tr>
               <td><span class="u-cell"><span class="u-av"><% if (u.avatar) { %><img src="<%= u.avatar %>" alt=""><% } else { %><%= (u.username||'C').charAt(0).toUpperCase() %><% } %></span><%= u.username %></span></td>
               <td class="muted"><%= u.email %></td>
-              <td class="muted small"><%= new Date(u.createdAt).toLocaleString() %></td>
+              <td class="mono small" title="<%= u.hwid || '' %>"><%= u.hwid ? (u.hwid.slice(0,12) + '…') : '—' %></td>
               <td><%= subTxt %></td>
+              <td><% if (banned) { %><span class="status status-pending">БАН <%= banTxt %></span><% } else { %><span class="muted small">ок</span><% } %></td>
               <td><% if (isAdminFn(u)) { %><span class="admin-badge">ADMIN</span><% } else { %><span class="muted small">user</span><% } %></td>
               <td>
                 <div class="grant-form">
@@ -58,11 +63,46 @@
                   <form action="/admin/sub/<%= u.id %>/delete" method="post" style="margin:0" onsubmit="return confirm('Удалить подписку у <%= u.username %>?')">
                     <button type="submit" class="btn-mini danger" title="удалить подписку">✕ подписку</button>
                   </form>
+                  <% if (banned) { %>
+                    <form action="/admin/unban/<%= u.id %>" method="post" style="margin:0">
+                      <button type="submit" class="btn-mini ghost" title="снять блокировку">Разбан</button>
+                    </form>
+                  <% } else { %>
+                    <form action="/admin/ban/<%= u.id %>" method="post" class="grant-form" style="margin:0">
+                      <input type="number" name="days" min="1" value="7" class="grant-days" title="дней бана (404 = навсегда)">
+                      <button type="submit" class="btn-mini danger" title="заблокировать (404 = навсегда)">Бан</button>
+                    </form>
+                  <% } %>
+                  <% if (u.hwid) { %>
+                    <form action="/admin/hwid/<%= u.id %>/reset" method="post" style="margin:0" onsubmit="return confirm('Сбросить HWID у <%= u.username %>?')">
+                      <button type="submit" class="btn-mini ghost" title="сбросить привязку HWID">HWID ✕</button>
+                    </form>
+                  <% } %>
                 </div>
               </td>
             </tr>
           <% }); %>
-          <% if (!users.length) { %><tr><td colspan="6" class="muted">Пусто</td></tr><% } %>
+          <% if (!users.length) { %><tr><td colspan="7" class="muted">Пусто</td></tr><% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- запуски лаунчера -->
+  <div class="panel" style="margin-bottom:22px">
+    <h3 class="panel-h">Запуски лаунчера (<%= launches.length %> последних)</h3>
+    <div class="tbl-wrap">
+      <table class="admin-tbl">
+        <thead><tr><th>Когда</th><th>UID</th><th>HWID</th></tr></thead>
+        <tbody>
+          <% launches.forEach(function(l){ %>
+            <tr>
+              <td class="muted small"><%= new Date(l.ts).toLocaleString() %></td>
+              <td><%= l.uid %></td>
+              <td class="mono small" title="<%= l.hwid || '' %>"><%= l.hwid ? (l.hwid.slice(0,20) + '…') : '—' %></td>
+            </tr>
+          <% }); %>
+          <% if (!launches.length) { %><tr><td colspan="3" class="muted">Пока пусто</td></tr><% } %>
         </tbody>
       </table>
     </div>

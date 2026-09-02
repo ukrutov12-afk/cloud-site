@@ -48,6 +48,24 @@ async function initPg() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_until TIMESTAMPTZ;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_forever BOOLEAN DEFAULT false;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_until TIMESTAMPTZ;
+  `);
+  // Лаунчер: сессии (токен на запуск) и статистика запусков.
+  // В launches СОЗНАТЕЛЬНО нет колонки ip — только аккаунт, HWID, время.
+  await pg.query(`
+    CREATE TABLE IF NOT EXISTS launcher_sessions (
+      token      TEXT PRIMARY KEY,
+      user_id    TEXT NOT NULL,
+      hwid       TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE TABLE IF NOT EXISTS launches (
+      id      TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      uid     INTEGER,
+      hwid    TEXT,
+      ts      TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
   `);
 }
 function rowUser(r) {
@@ -58,11 +76,13 @@ function rowUser(r) {
     subPlan: r.sub_plan,
     subUntil: r.sub_until instanceof Date ? r.sub_until.toISOString() : r.sub_until,
     subForever: !!r.sub_forever,
+    bannedUntil: r.banned_until instanceof Date ? r.banned_until.toISOString() : r.banned_until,
     createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at
   };
 }
 const USER_COLS = { plan: 'plan', hwid: 'hwid', uid: 'uid', passwordHash: 'password_hash',
-  subPlan: 'sub_plan', subUntil: 'sub_until', subForever: 'sub_forever', avatar: 'avatar' };
+  subPlan: 'sub_plan', subUntil: 'sub_until', subForever: 'sub_forever', avatar: 'avatar',
+  bannedUntil: 'banned_until' };
 function rowOrder(r) {
   return r && {
     id: r.id, userId: r.user_id, plan: r.plan, price: Number(r.price), currency: r.currency,
@@ -127,6 +147,25 @@ const pgApi = {
   },
   async deleteOrder(orderId) {
     await pg.query('DELETE FROM orders WHERE id=$1', [orderId]);
+  },
+  // ── лаунчер ──
+  async createLauncherSession({ userId, hwid }) {
+    const token = require('crypto').randomBytes(24).toString('hex');
+    await pg.query('INSERT INTO launcher_sessions (token, user_id, hwid) VALUES ($1,$2,$3)', [token, userId, hwid]);
+    return token;
+  },
+  async findLauncherSession(token) {
+    const { rows } = await pg.query('SELECT token, user_id, hwid, created_at FROM launcher_sessions WHERE token=$1', [token]);
+    const r = rows[0];
+    return r ? { token: r.token, userId: r.user_id, hwid: r.hwid, createdAt: r.created_at } : null;
+  },
+  async recordLaunch({ userId, uid, hwid }) {
+    await pg.query('INSERT INTO launches (id, user_id, uid, hwid) VALUES ($1,$2,$3,$4)', [newId('l'), userId, uid, hwid]);
+  },
+  async getLaunches(limit = 50) {
+    const { rows } = await pg.query('SELECT * FROM launches ORDER BY ts DESC LIMIT $1', [limit]);
+    return rows.map(r => ({ id: r.id, userId: r.user_id, uid: r.uid, hwid: r.hwid,
+      ts: r.ts instanceof Date ? r.ts.toISOString() : r.ts }));
   }
 };
 
@@ -134,10 +173,14 @@ const pgApi = {
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
+const LSESS_FILE = path.join(DATA_DIR, 'launcher_sessions.json');
+const LAUNCHES_FILE = path.join(DATA_DIR, 'launches.json');
 function ensureFiles() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, '[]');
   if (!fs.existsSync(ORDERS_FILE)) fs.writeFileSync(ORDERS_FILE, '[]');
+  if (!fs.existsSync(LSESS_FILE)) fs.writeFileSync(LSESS_FILE, '[]');
+  if (!fs.existsSync(LAUNCHES_FILE)) fs.writeFileSync(LAUNCHES_FILE, '[]');
 }
 function readJSON(f) { try { return JSON.parse(fs.readFileSync(f, 'utf8') || '[]'); } catch { return []; } }
 function writeJSON(f, d) { fs.writeFileSync(f, JSON.stringify(d, null, 2)); }
@@ -158,7 +201,7 @@ const fileApi = {
       id: newId('u'), username: username.trim(), email: email.toLowerCase().trim(),
       passwordHash, plan: null, uid: 10000 + Math.floor(Math.random() * 89999),
       hwid: null, avatar: null, subPlan: null, subUntil: null, subForever: false,
-      createdAt: new Date().toISOString()
+      bannedUntil: null, createdAt: new Date().toISOString()
     };
     users.push(user); writeJSON(USERS_FILE, users);
     return user;
@@ -193,6 +236,25 @@ const fileApi = {
   },
   async deleteOrder(orderId) {
     writeJSON(ORDERS_FILE, readJSON(ORDERS_FILE).filter(o => o.id !== orderId));
+  },
+  // ── лаунчер ──
+  async createLauncherSession({ userId, hwid }) {
+    const token = require('crypto').randomBytes(24).toString('hex');
+    const s = readJSON(LSESS_FILE);
+    s.push({ token, userId, hwid, createdAt: new Date().toISOString() });
+    writeJSON(LSESS_FILE, s);
+    return token;
+  },
+  async findLauncherSession(token) {
+    return readJSON(LSESS_FILE).find(x => x.token === token) || null;
+  },
+  async recordLaunch({ userId, uid, hwid }) {
+    const l = readJSON(LAUNCHES_FILE);
+    l.push({ id: newId('l'), userId, uid, hwid, ts: new Date().toISOString() });
+    writeJSON(LAUNCHES_FILE, l);
+  },
+  async getLaunches(limit = 50) {
+    return readJSON(LAUNCHES_FILE).sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, limit);
   }
 };
 

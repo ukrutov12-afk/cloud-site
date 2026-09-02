@@ -48,6 +48,24 @@ const CONTACTS = {
   email: process.env.SUPPORT_EMAIL || ''
 };
 
+// ─────────── Telegram-уведомления о запусках лаунчера ───────────
+// Секреты — из env (на Render), пустые = уведомления просто выключены.
+// СОЗНАТЕЛЬНО без IP: шлём только аккаунт, UID, HWID, время.
+const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN || '';
+const TG_CHAT_ID = process.env.TG_CHAT_ID || '';
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+}
+function notifyTelegram(text) {
+  if (!TG_BOT_TOKEN || !TG_CHAT_ID) return;
+  // Node 20+: глобальный fetch. Fire-and-forget, ошибку глотаем.
+  fetch('https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: TG_CHAT_ID, text, parse_mode: 'HTML', disable_web_page_preview: true })
+  }).catch(() => {});
+}
+
 // ─────────────────────────── i18n ───────────────────────────
 const LANGS = ['be', 'ru', 'uk', 'en'];
 const DEFAULT_LANG = 'ru';
@@ -119,6 +137,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); // для JSON-запросов нативного лаунчера (/api/launcher/*)
 // Стор сессий: Postgres (если есть DATABASE_URL) иначе файлы — чтобы логины
 // переживали рестарт и на бесплатном хостинге (эфемерная ФС) не терялись.
 let sessionStore;
@@ -194,9 +213,91 @@ async function requireAdmin(req, res, next) {
 }
 const isEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || ''));
 
+// ─────────── Хелперы аккаунта (для лаунчера и админки) ───────────
+const BAN_FOREVER_YEAR = 9999;
+// UID: из БД или стабильно выводим из id (как на странице аккаунта)
+function accountUid(user) {
+  if (user && user.uid) return user.uid;
+  let uid = 0; const s = String(user && user.id || '');
+  for (let i = 0; i < s.length; i++) uid = (uid * 31 + s.charCodeAt(i)) % 90000;
+  return uid + 10000;
+}
+function isBanned(user) {
+  return !!(user && user.bannedUntil && new Date(user.bannedUntil) > new Date());
+}
+function banMessage(user) {
+  const until = new Date(user.bannedUntil);
+  if (until.getFullYear() >= BAN_FOREVER_YEAR) return 'Аккаунт заблокирован навсегда.';
+  return 'Аккаунт заблокирован до ' + until.toISOString().slice(0, 10) + '.';
+}
+// активная подписка (админ — всегда; иначе forever или subUntil в будущем)
+function subActive(user) {
+  if (!user) return false;
+  if (isAdmin(user)) return true;
+  if (user.subForever) return true;
+  if (user.subUntil) return new Date(user.subUntil) > effectiveNow();
+  return false;
+}
+
 // ─────────────────────────── Маршруты ───────────────────────────
 app.get('/', (req, res) => res.render('index', { page: 'home' }));
 app.get('/healthz', (req, res) => res.status(200).json({ ok: true, service: 'zephyr-client' }));
+
+// ───────────────────── Лаунчер ─────────────────────
+// Страница, которую грузит нативный webview-шелл. Отдельный статик-файл,
+// не EJS: он самодостаточный и общается с нативом через WebView2-мост.
+app.get('/launcher', (req, res) => res.sendFile(path.join(__dirname, 'views', 'launcher.html')));
+
+// Логин из лаунчера теми же кредами, что на сайте. Привязывает HWID к аккаунту.
+app.post('/api/launcher/auth', async (req, res) => {
+  try {
+    const { login, password, hwid } = req.body || {};
+    if (!login || !password || !hwid) return res.status(400).json({ ok: false, message: 'Не хватает полей.' });
+
+    const id = String(login).trim();
+    let user = await db.findByEmail(id);
+    if (!user) user = await db.findByUsername(id);
+    if (!user || !bcrypt.compareSync(String(password), user.passwordHash)) {
+      return res.status(401).json({ ok: false, message: 'Неверный логин или пароль.' });
+    }
+    if (isBanned(user)) return res.status(403).json({ ok: false, message: banMessage(user) });
+    if (!subActive(user)) return res.status(403).json({ ok: false, message: 'Нет активной подписки.' });
+
+    // HWID-замок: первый вход привязывает, дальше обязан совпасть.
+    if (!user.hwid) {
+      await db.updateUser(user.id, { hwid: String(hwid) });
+      user.hwid = String(hwid);
+    } else if (user.hwid !== String(hwid)) {
+      return res.status(403).json({ ok: false, message: 'Другой компьютер (HWID не совпал). Сбрось HWID в кабинете.' });
+    }
+
+    const token = await db.createLauncherSession({ userId: user.id, hwid: user.hwid });
+    res.json({ ok: true, token, uid: accountUid(user), username: user.username });
+  } catch (e) { console.error(e); res.status(500).json({ ok: false, message: 'Ошибка сервера.' }); }
+});
+
+// Лаунчер сообщает о запуске: пишем статистику (UID+ник+HWID+время, БЕЗ IP) + Telegram.
+app.post('/api/launcher/launch', async (req, res) => {
+  try {
+    const auth = req.headers.authorization || '';
+    if (!auth.startsWith('Bearer ')) return res.status(401).json({ ok: false });
+    const sess = await db.findLauncherSession(auth.slice(7));
+    if (!sess) return res.status(401).json({ ok: false });
+    const user = await db.findById(sess.userId);
+    if (!user) return res.status(401).json({ ok: false });
+    if (isBanned(user)) return res.status(403).json({ ok: false, message: banMessage(user) });
+
+    const uid = accountUid(user);
+    await db.recordLaunch({ userId: user.id, uid, hwid: sess.hwid });
+    notifyTelegram(
+      '\u{1F7E3} <b>Zephyr запущен</b>\n' +
+      'Аккаунт: <b>' + esc(user.username) + '</b> (UID ' + uid + ')\n' +
+      'HWID: <code>' + esc(sess.hwid || '—') + '</code>\n' +
+      'Время (UTC): ' + new Date().toISOString().slice(0, 19).replace('T', ' ')
+    );
+    res.json({ ok: true });
+  } catch (e) { console.error(e); res.status(500).json({ ok: false }); }
+});
 
 app.get('/buy', async (req, res, next) => {
   try {
@@ -408,12 +509,16 @@ app.get('/admin', requireAdmin, async (req, res, next) => {
       backend: db.backend,
       now: new Date().toISOString()
     };
+    const launches = await db.getLaunches(50);
     res.render('admin', {
       page: 'admin',
       stats,
       users: users.slice(0, 50),
       orders: orders.slice(0, 50),
-      isAdminFn: isAdmin
+      launches,
+      isAdminFn: isAdmin,
+      isBannedFn: isBanned,
+      uidFn: accountUid
     });
   } catch (e) { next(e); }
 });
@@ -446,6 +551,35 @@ app.post('/admin/order/:id/:status', requireAdmin, async (req, res, next) => {
 app.post('/admin/sub/:userId/delete', requireAdmin, async (req, res, next) => {
   try {
     await db.updateUser(req.params.userId, { plan: null, subPlan: null, subUntil: null, subForever: false });
+    res.redirect('/admin');
+  } catch (e) { next(e); }
+});
+
+// заблокировать юзера на N дней (404 = навсегда)
+app.post('/admin/ban/:userId', requireAdmin, async (req, res, next) => {
+  try {
+    const rawDays = parseInt(req.body.days, 10);
+    const forever = rawDays === 404 || req.body.days === 'forever';
+    const until = forever
+      ? new Date(Date.UTC(BAN_FOREVER_YEAR, 0, 1))
+      : new Date(Date.now() + Math.max(1, rawDays || 1) * 86400000);
+    await db.updateUser(req.params.userId, { bannedUntil: until.toISOString() });
+    res.redirect('/admin');
+  } catch (e) { next(e); }
+});
+
+// снять блокировку
+app.post('/admin/unban/:userId', requireAdmin, async (req, res, next) => {
+  try {
+    await db.updateUser(req.params.userId, { bannedUntil: null });
+    res.redirect('/admin');
+  } catch (e) { next(e); }
+});
+
+// сбросить HWID юзеру (переезд на новый ПК)
+app.post('/admin/hwid/:userId/reset', requireAdmin, async (req, res, next) => {
+  try {
+    await db.updateUser(req.params.userId, { hwid: null });
     res.redirect('/admin');
   } catch (e) { next(e); }
 });
