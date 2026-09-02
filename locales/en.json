@@ -91,7 +91,15 @@
     "frozen_flash": "Purchases are temporarily frozen — place a pre-order.",
     "via": "Message:",
     "copy": "Copy",
-    "copied": "Copied"
+    "copied": "Copied",
+    "extras_title": "Extras",
+    "item_freeze": "Subscription freeze",
+    "item_freeze_desc": "Pauses the day-count until you unfreeze. 1 purchase = 1 freeze. You can't play while frozen.",
+    "item_hwid": "HWID reset",
+    "item_hwid_desc": "Unlink the current PC to log in from a new one. 1 purchase = 1 reset.",
+    "buy_item": "Buy",
+    "item_bought": "Purchased. Check your account.",
+    "discount": "Discount"
   },
   "auth": {
     "login_title": "Log in to your account",

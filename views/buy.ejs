@@ -58,11 +58,11 @@
       <div class="checkout-main panel">
         <h3 class="panel-h"><%= t('buy.choose_plan') %></h3>
         <div class="plan-picker">
-          <% ['month','season','halfyear','lifetime','lifetime_beta'].forEach(function(id){ var p = plans[id]; %>
-            <label class="plan-opt <%= id===plan.id ? 'sel' : '' %>" data-price="<%= p.price %>" data-name="<%= t('pricing.'+id+'_t') %>" data-id="<%= id %>">
+          <% ['month','season','halfyear','lifetime','lifetime_beta'].forEach(function(id){ var p = plans[id]; var pv = priceView(p.price); %>
+            <label class="plan-opt <%= id===plan.id ? 'sel' : '' %>" data-price="<%= pv.final %>" data-name="<%= t('pricing.'+id+'_t') %>" data-id="<%= id %>">
               <input type="radio" name="plan" value="<%= id %>" <%= id===plan.id ? 'checked' : '' %>>
               <span class="po-name"><%= t('pricing.'+id+'_t') %></span>
-              <span class="po-price"><%= p.price %> ₽</span>
+              <span class="po-price"><%= pv.final %> ₽<% if (pv.pct) { %> <s style="opacity:.5"><%= pv.base %></s><% } %></span>
             </label>
           <% }); %>
         </div>
@@ -83,11 +83,43 @@
 
       <aside class="checkout-side panel">
         <h3 class="panel-h"><%= t('buy.summary') %></h3>
-        <div class="sum-row"><span id="sumName"><%= t('pricing.'+plan.id+'_t') %></span><span id="sumBase"><%= plan.price %> ₽</span></div>
-        <div class="sum-total"><span><%= t('buy.summary') %></span><strong id="sumTotal"><%= plan.price %> ₽</strong></div>
+        <% var pvSel = priceView(plan.price); %>
+        <div class="sum-row"><span id="sumName"><%= t('pricing.'+plan.id+'_t') %></span><span id="sumBase"><%= pvSel.final %> ₽</span></div>
+        <% if (discPct) { %><div class="sum-row muted small"><span><%= t('buy.discount') %></span><span>−<%= discPct %>%</span></div><% } %>
+        <div class="sum-total"><span><%= t('buy.summary') %></span><strong id="sumTotal"><%= pvSel.final %> ₽</strong></div>
       </aside>
     </div>
   </form>
+
+  <!-- ───── Расходники ───── -->
+  <h3 class="plans-heading"><%= t('buy.extras_title') %></h3>
+  <div class="checkout">
+    <% var pvF = priceView(freezePrice), pvH = priceView(hwidPrice); %>
+    <div class="checkout-main panel" style="flex:1">
+      <h3 class="panel-h"><%= t('buy.item_freeze') %></h3>
+      <p class="muted small" style="margin-bottom:14px"><%= t('buy.item_freeze_desc') %></p>
+      <div class="sum-total"><span><%= t('buy.summary') %></span><strong><%= pvF.final %> ₽<% if (pvF.pct) { %> <s style="opacity:.5"><%= pvF.base %></s><% } %></strong></div>
+      <% if (frozen) { %>
+        <a href="#frozen" class="btn btn-primary btn-block" style="margin-top:12px"><%= t('buy.preorder') %></a>
+      <% } else if (!user) { %>
+        <a href="/login" class="btn btn-ghost btn-block" style="margin-top:12px"><%= t('buy.need_login') %></a>
+      <% } else { %>
+        <form action="/buy/item" method="post"><input type="hidden" name="item" value="freeze"><button type="submit" class="btn btn-primary btn-block" style="margin-top:12px"><%= t('buy.buy_item') %></button></form>
+      <% } %>
+    </div>
+    <div class="checkout-main panel" style="flex:1">
+      <h3 class="panel-h"><%= t('buy.item_hwid') %></h3>
+      <p class="muted small" style="margin-bottom:14px"><%= t('buy.item_hwid_desc') %></p>
+      <div class="sum-total"><span><%= t('buy.summary') %></span><strong><%= pvH.final %> ₽<% if (pvH.pct) { %> <s style="opacity:.5"><%= pvH.base %></s><% } %></strong></div>
+      <% if (frozen) { %>
+        <a href="#frozen" class="btn btn-primary btn-block" style="margin-top:12px"><%= t('buy.preorder') %></a>
+      <% } else if (!user) { %>
+        <a href="/login" class="btn btn-ghost btn-block" style="margin-top:12px"><%= t('buy.need_login') %></a>
+      <% } else { %>
+        <form action="/buy/item" method="post"><input type="hidden" name="item" value="hwid"><button type="submit" class="btn btn-primary btn-block" style="margin-top:12px"><%= t('buy.buy_item') %></button></form>
+      <% } %>
+    </div>
+  </div>
 </section>
 
 <script>
@@ -104,11 +136,12 @@
 
   // ── триал-ползунок ──
   var TRIAL = <%- JSON.stringify(trialPrices) %>;
+  var DPCT = <%= discPct %>;
   var range = document.getElementById('trialRange');
   if (range) {
     var dWord = { one: '<%= t("buy.trial_day") %>', many: '<%= t("buy.trial_days") %>' };
     function updTrial(){
-      var d = +range.value, pr = TRIAL[d];
+      var d = +range.value, pr = Math.round(TRIAL[d] * (100 - DPCT) / 100);
       document.getElementById('trialDays').textContent = d;
       document.getElementById('trialDaysWord').textContent = d === 1 ? dWord.one : dWord.many;
       document.getElementById('trialPrice').textContent = pr;

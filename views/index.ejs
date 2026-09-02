@@ -94,7 +94,8 @@
       <article class="price-card <%= p.popular ? 'popular' : '' %> reveal-on-scroll">
         <% if (p.popular) { %><span class="popular-label"><%= t('pricing.most_popular') %></span><% } %>
         <div class="plan-title"><span><%= t('pricing.'+id+'_t') %></span><small>Zephyr access</small></div>
-        <div class="plan-price"><%= p.price.toLocaleString('ru-RU') %> ₽</div>
+        <% var pv = priceView(p.price); %>
+        <div class="plan-price"><%= pv.final.toLocaleString('ru-RU') %> ₽<% if (pv.pct) { %> <s style="opacity:.45;font-size:.62em;font-weight:500"><%= pv.base.toLocaleString('ru-RU') %></s> <span style="color:var(--accent,#8f6dfa);font-size:.6em;font-weight:700;vertical-align:middle">−<%= pv.pct %>%</span><% } %></div>
         <div class="plan-period"><%= id === 'month' ? '30 days' : id === 'season' ? '90 days' : id === 'halfyear' ? '180 days' : 'lifetime' %></div>
         <ul><% list.forEach(function(item){ %><li><i>✓</i><%= item %></li><% }); %></ul>
         <a class="button <%= p.popular ? 'button-primary' : 'button-secondary' %>" href="/buy?plan=<%= id %>"><%= t('pricing.buy_btn') %><span>→</span></a>

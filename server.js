@@ -92,6 +92,25 @@ const PLANS = {
   lifetime:      { id: 'lifetime',      price: 999, currency: 'RUB', months: 0 },
   lifetime_beta: { id: 'lifetime_beta', price: 1199, currency: 'RUB', months: 0, beta: true }
 };
+
+// ─────────────────────────── Скидки ───────────────────────────
+// Общая распродажа 10% для всех до 2027; «олдам» (зареган до 2027) — 13%.
+// Не суммируются — берём бо́льшую. Даты правишь тут.
+const SALE_PCT = 10;
+const OLD_PCT = 13;
+const SALE_UNTIL = new Date('2027-01-01T00:00:00+03:00');
+const OLD_BEFORE = new Date('2027-01-01T00:00:00+03:00');
+function discountPercent(user) {
+  let pct = 0;
+  if (Date.now() < SALE_UNTIL.getTime()) pct = SALE_PCT;
+  if (user && user.createdAt && new Date(user.createdAt) < OLD_BEFORE) pct = Math.max(pct, OLD_PCT);
+  return pct;
+}
+function applyDiscount(price, user) {
+  const pct = discountPercent(user);
+  return { base: price, pct, final: Math.round(price * (100 - pct) / 100) };
+}
+
 // Пробный период — цена за N дней (1..7). Один раз на аккаунт.
 const TRIAL_PRICES = { 1: 39, 2: 42, 3: 45, 4: 49, 5: 52, 6: 55, 7: 59 };
 function trialPrice(days) {
@@ -208,6 +227,8 @@ app.use(async (req, res, next) => {
     res.locals.plans = PLANS;
     res.locals.user = req.session.userId ? await db.findById(req.session.userId) : null;
     res.locals.isAdmin = isAdmin(res.locals.user);
+    res.locals.discPct = discountPercent(res.locals.user);
+    res.locals.priceView = (p) => applyDiscount(p, res.locals.user);
 
     // флеш-сообщения (одноразовые)
     res.locals.flash = req.session.flash || null;
@@ -333,7 +354,8 @@ app.get('/buy', async (req, res, next) => {
       const orders = await db.getOrdersByUser(req.session.userId);
       trialUsed = orders.some(o => String(o.plan).startsWith('trial'));
     }
-    res.render('buy', { page: 'buy', plan: PLANS[planId], trialPrices: TRIAL_PRICES, trialUsed });
+    res.render('buy', { page: 'buy', plan: PLANS[planId], trialPrices: TRIAL_PRICES, trialUsed,
+      freezePrice: FREEZE_PRICE, hwidPrice: HWID_RESET_PRICE });
   } catch (e) { next(e); }
 });
 
@@ -342,7 +364,8 @@ app.post('/buy', requireAuth, async (req, res, next) => {
     if (FROZEN) { flash(req, 'error', 'buy.frozen_flash'); return res.redirect('/buy'); }
     // бета теперь отдельный продукт (lifetime_beta), выбирается как обычный тариф
     const plan = PLANS[req.body.plan] || PLANS.lifetime;
-    await db.createOrder({ userId: req.session.userId, plan: plan.id, price: plan.price, currency: plan.currency });
+    const price = applyDiscount(plan.price, await db.findById(req.session.userId)).final;
+    await db.createOrder({ userId: req.session.userId, plan: plan.id, price, currency: plan.currency });
     await applySub(req.session.userId, plan.id, planDays(plan.id));
     await grantGifts(req.session.userId, plan.id); // подарки: заморозки / сбросы HWID
     flash(req, 'success', 'buy.order_created');
@@ -360,9 +383,29 @@ app.post('/buy/trial', requireAuth, async (req, res, next) => {
       return res.redirect('/buy');
     }
     const days = Math.max(1, Math.min(7, parseInt(req.body.days, 10) || 1));
-    await db.createOrder({ userId: req.session.userId, plan: 'trial_' + days + 'd', price: trialPrice(days), currency: 'RUB' });
+    const tprice = applyDiscount(trialPrice(days), await db.findById(req.session.userId)).final;
+    await db.createOrder({ userId: req.session.userId, plan: 'trial_' + days + 'd', price: tprice, currency: 'RUB' });
     await applySub(req.session.userId, 'trial_' + days + 'd', days);
     flash(req, 'success', 'buy.order_created');
+    res.redirect('/account');
+  } catch (e) { next(e); }
+});
+
+// покупка расходника: заморозка или сброс HWID (с учётом скидки)
+app.post('/buy/item', requireAuth, async (req, res, next) => {
+  try {
+    if (FROZEN) { flash(req, 'error', 'buy.frozen_flash'); return res.redirect('/buy'); }
+    const item = req.body.item;
+    if (item !== 'freeze' && item !== 'hwid') return res.redirect('/buy');
+    const u = await db.findById(req.session.userId);
+    const base = item === 'freeze' ? FREEZE_PRICE : HWID_RESET_PRICE;
+    const price = applyDiscount(base, u).final;
+    const patch = item === 'freeze'
+      ? { freezes: (u.freezes || 0) + 1 }
+      : { hwidResets: (u.hwidResets || 0) + 1 };
+    await db.createOrder({ userId: u.id, plan: item === 'freeze' ? 'item_freeze' : 'item_hwid', price, currency: 'RUB' });
+    await db.updateUser(u.id, patch);
+    flash(req, 'success', 'buy.item_bought');
     res.redirect('/account');
   } catch (e) { next(e); }
 });
