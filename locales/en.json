@@ -8,7 +8,8 @@
     "login": "Log in",
     "register": "Sign up",
     "account": "Account",
-    "logout": "Log out"
+    "logout": "Log out",
+    "promo": "Promo"
   },
   "hero": {
     "badge": "Minecraft 1.21.4 • Fabric",
@@ -217,5 +218,16 @@
     "err_user_taken": "This username is taken.",
     "err_creds": "Wrong email or password.",
     "err_login_required": "Please log in first."
+  },
+  "promo": {
+    "title": "Promo code",
+    "subtitle": "Enter a promo code to get access.",
+    "code_label": "Promo code",
+    "redeem_btn": "Redeem",
+    "ok": "Promo code redeemed!",
+    "err_notfound": "Promo code not found.",
+    "err_target": "This promo code is not for your account.",
+    "err_used_up": "Promo code is used up.",
+    "err_already": "You have already redeemed this promo code."
   }
 }

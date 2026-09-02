@@ -53,18 +53,23 @@ const CONTACTS = {
 // СОЗНАТЕЛЬНО без IP: шлём только аккаунт, UID, HWID, время.
 const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN || '';
 const TG_CHAT_ID = process.env.TG_CHAT_ID || '';
+// Кто может создавать промокоды в боте (Telegram chat/user id). По умолчанию — твой чат.
+const TG_ADMIN_ID = String(process.env.TG_ADMIN_ID || TG_CHAT_ID || '');
+// Секрет вебхука (setWebhook secret_token). Обязателен на проде — иначе payload можно подделать.
+const TG_WEBHOOK_SECRET = process.env.TG_WEBHOOK_SECRET || '';
 function esc(s) {
   return String(s == null ? '' : s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
 }
-function notifyTelegram(text) {
-  if (!TG_BOT_TOKEN || !TG_CHAT_ID) return;
-  // Node 20+: глобальный fetch. Fire-and-forget, ошибку глотаем.
-  fetch('https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage', {
+// Node 20+: глобальный fetch. Fire-and-forget, ошибку глотаем.
+function tgSend(chatId, text) {
+  if (!TG_BOT_TOKEN || !chatId) return Promise.resolve();
+  return fetch('https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: TG_CHAT_ID, text, parse_mode: 'HTML', disable_web_page_preview: true })
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true })
   }).catch(() => {});
 }
+function notifyTelegram(text) { return tgSend(TG_CHAT_ID, text); }
 
 // ─────────────────────────── i18n ───────────────────────────
 const LANGS = ['be', 'ru', 'uk', 'en'];
@@ -161,6 +166,57 @@ async function grantGifts(userId, planId) {
     freezes: (u.freezes || 0) + g.freezes,
     hwidResets: (u.hwidResets || 0) + g.hwidResets
   });
+}
+
+// ─────────────── Промокоды: визард в Telegram-боте ───────────────
+function genPromoCode() {
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 7; i++) s += A[Math.floor(Math.random() * A.length)];
+  return s;
+}
+
+// Пошаговый диалог: /promo -> название -> период -> активации -> ник.
+// «.» = пусто (название сгенерится, период/активации = без лимита, ник = для всех).
+async function handlePromoWizard(chatId, text) {
+  const t = (text || '').trim();
+  if (t === '/cancel') { await db.clearBotState(chatId); return tgSend(chatId, 'Отменено.'); }
+  if (/^\/promo(@\w+)?$/i.test(t)) {
+    await db.setBotState(chatId, { step: 'name', data: {} });
+    return tgSend(chatId, '🎟 <b>Новый промокод</b> — шаг 1/4.\nУкажи <b>название</b> (или <code>.</code> — сгенерирую):');
+  }
+  const st = await db.getBotState(chatId);
+  if (!st) return tgSend(chatId, 'Команды: /promo — создать промокод, /cancel — отмена.');
+  const d = st.data || {};
+  if (st.step === 'name') {
+    d.code = (t === '.' || !t) ? genPromoCode() : t.replace(/\s+/g, '');
+    if (await db.getPromo(d.code)) { await db.clearBotState(chatId); return tgSend(chatId, 'Код <code>' + esc(d.code) + '</code> уже есть. Начни заново: /promo'); }
+    await db.setBotState(chatId, { step: 'period', data: d });
+    return tgSend(chatId, 'Шаг 2/4. <b>Период</b> в днях (число, <code>404</code> или <code>.</code> = навсегда):');
+  }
+  if (st.step === 'period') {
+    if (t === '.' || t === '404') { d.forever = true; d.days = null; }
+    else { const n = parseInt(t, 10); if (isNaN(n) || n < 1) return tgSend(chatId, 'Нужно число дней, или <code>404</code>/<code>.</code> = навсегда.'); d.forever = false; d.days = n; }
+    await db.setBotState(chatId, { step: 'uses', data: d });
+    return tgSend(chatId, 'Шаг 3/4. <b>Кол-во активаций</b> (число, <code>404</code> или <code>.</code> = безлимит):');
+  }
+  if (st.step === 'uses') {
+    if (t === '.' || t === '404') d.maxUses = 0;
+    else { const n = parseInt(t, 10); if (isNaN(n) || n < 1) return tgSend(chatId, 'Нужно число активаций, или <code>404</code>/<code>.</code> = безлимит.'); d.maxUses = n; }
+    await db.setBotState(chatId, { step: 'target', data: d });
+    return tgSend(chatId, 'Шаг 4/4. <b>Ник</b> кому выдать (<code>.</code> = для всех):');
+  }
+  if (st.step === 'target') {
+    d.target = (t === '.' || !t) ? '' : t.toLowerCase();
+    await db.createPromo({ code: d.code, days: d.days, forever: d.forever, maxUses: d.maxUses, target: d.target });
+    await db.clearBotState(chatId);
+    const grant = d.forever ? 'навсегда' : (d.days + ' дн.');
+    const uses = d.maxUses ? (d.maxUses + ' активаций') : 'безлимит';
+    const who = d.target ? ('@' + esc(d.target)) : 'для всех';
+    return tgSend(chatId, '✅ <b>Промокод создан</b>\nКод: <code>' + esc(d.code) + '</code>\nВыдаёт: ' + grant + '\nАктиваций: ' + uses + '\nКому: ' + who);
+  }
+  await db.clearBotState(chatId);
+  return tgSend(chatId, 'Сбой шага. Начни заново: /promo');
 }
 
 // ─────────────────────────── Админы ───────────────────────────
@@ -343,6 +399,43 @@ app.post('/api/launcher/launch', async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) { console.error(e); res.status(500).json({ ok: false }); }
+});
+
+// ── Telegram-бот (webhook): только админ создаёт промокоды ──
+app.get('/api/tg/webhook', (req, res) => res.json({ ok: true })); // проверка живости
+app.post('/api/tg/webhook', async (req, res) => {
+  if (TG_WEBHOOK_SECRET && req.headers['x-telegram-bot-api-secret-token'] !== TG_WEBHOOK_SECRET) {
+    return res.sendStatus(403);
+  }
+  res.sendStatus(200); // Telegram ждёт быстрый 200
+  try {
+    const msg = req.body && req.body.message;
+    if (!msg || !msg.text || !msg.chat) return;
+    const chatId = String(msg.chat.id);
+    if (!TG_ADMIN_ID || chatId !== TG_ADMIN_ID) return; // чужим бот не отвечает
+    await handlePromoWizard(chatId, msg.text);
+  } catch (e) { console.error('tg webhook', e); }
+});
+
+// ── Промокоды на сайте ──
+app.get('/promo', (req, res) => res.render('promo', { page: 'promo' }));
+app.post('/promo', requireAuth, async (req, res, next) => {
+  try {
+    const code = String(req.body.code || '').trim();
+    const user = await db.findById(req.session.userId);
+    const p = code ? await db.getPromo(code) : null;
+    if (!p) { flash(req, 'error', 'promo.err_notfound'); return res.redirect('/promo'); }
+    if (p.target && p.target.toLowerCase() !== String(user.username).toLowerCase()) {
+      flash(req, 'error', 'promo.err_target'); return res.redirect('/promo');
+    }
+    if (p.maxUses > 0 && p.uses >= p.maxUses) { flash(req, 'error', 'promo.err_used_up'); return res.redirect('/promo'); }
+    if (await db.hasRedeemed(p.code, user.id)) { flash(req, 'error', 'promo.err_already'); return res.redirect('/promo'); }
+    await applySub(user.id, 'promo_' + p.code, p.forever ? null : p.days);
+    await db.addRedemption(p.code, user.id);
+    await db.incPromoUses(p.code);
+    flash(req, 'success', 'promo.ok');
+    res.redirect('/account');
+  } catch (e) { next(e); }
 });
 
 app.get('/buy', async (req, res, next) => {

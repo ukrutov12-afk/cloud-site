@@ -70,6 +70,26 @@ async function initPg() {
       hwid    TEXT,
       ts      TIMESTAMPTZ NOT NULL DEFAULT now()
     );
+    CREATE TABLE IF NOT EXISTS promos (
+      code       TEXT PRIMARY KEY,
+      days       INTEGER,
+      forever    BOOLEAN DEFAULT false,
+      max_uses   INTEGER DEFAULT 0,
+      uses       INTEGER DEFAULT 0,
+      target     TEXT DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE TABLE IF NOT EXISTS promo_redemptions (
+      code    TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      ts      TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (code, user_id)
+    );
+    CREATE TABLE IF NOT EXISTS bot_state (
+      chat_id    TEXT PRIMARY KEY,
+      state      TEXT,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
   `);
 }
 function rowUser(r) {
@@ -175,7 +195,46 @@ const pgApi = {
     const { rows } = await pg.query('SELECT * FROM launches ORDER BY ts DESC LIMIT $1', [limit]);
     return rows.map(r => ({ id: r.id, userId: r.user_id, uid: r.uid, hwid: r.hwid,
       ts: r.ts instanceof Date ? r.ts.toISOString() : r.ts }));
-  }
+  },
+  // ── промокоды ──
+  async createPromo(p) {
+    await pg.query(
+      'INSERT INTO promos (code, days, forever, max_uses, uses, target) VALUES ($1,$2,$3,$4,0,$5)',
+      [p.code, p.days, !!p.forever, p.maxUses || 0, p.target || '']);
+    return p;
+  },
+  async getPromo(code) {
+    const { rows } = await pg.query('SELECT * FROM promos WHERE LOWER(code)=LOWER($1)', [code]);
+    const r = rows[0];
+    return r ? { code: r.code, days: r.days, forever: !!r.forever, maxUses: r.max_uses,
+      uses: r.uses, target: r.target || '' } : null;
+  },
+  async incPromoUses(code) { await pg.query('UPDATE promos SET uses=uses+1 WHERE LOWER(code)=LOWER($1)', [code]); },
+  async listPromos(limit = 50) {
+    const { rows } = await pg.query('SELECT * FROM promos ORDER BY created_at DESC LIMIT $1', [limit]);
+    return rows.map(r => ({ code: r.code, days: r.days, forever: !!r.forever, maxUses: r.max_uses,
+      uses: r.uses, target: r.target || '' }));
+  },
+  async hasRedeemed(code, userId) {
+    const { rows } = await pg.query('SELECT 1 FROM promo_redemptions WHERE LOWER(code)=LOWER($1) AND user_id=$2', [code, userId]);
+    return rows.length > 0;
+  },
+  async addRedemption(code, userId) {
+    await pg.query('INSERT INTO promo_redemptions (code, user_id) VALUES ($1,$2) ON CONFLICT DO NOTHING', [code, userId]);
+  },
+  // ── состояние визарда бота ──
+  async getBotState(chatId) {
+    const { rows } = await pg.query('SELECT state FROM bot_state WHERE chat_id=$1', [String(chatId)]);
+    if (!rows[0] || !rows[0].state) return null;
+    try { return JSON.parse(rows[0].state); } catch { return null; }
+  },
+  async setBotState(chatId, obj) {
+    await pg.query(
+      'INSERT INTO bot_state (chat_id, state, updated_at) VALUES ($1,$2,now()) ' +
+      'ON CONFLICT (chat_id) DO UPDATE SET state=$2, updated_at=now()',
+      [String(chatId), JSON.stringify(obj)]);
+  },
+  async clearBotState(chatId) { await pg.query('DELETE FROM bot_state WHERE chat_id=$1', [String(chatId)]); }
 };
 
 // ─────────────────────────── JSON-file backend ───────────────────────────
@@ -184,12 +243,18 @@ const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 const LSESS_FILE = path.join(DATA_DIR, 'launcher_sessions.json');
 const LAUNCHES_FILE = path.join(DATA_DIR, 'launches.json');
+const PROMOS_FILE = path.join(DATA_DIR, 'promos.json');
+const REDEMPTIONS_FILE = path.join(DATA_DIR, 'promo_redemptions.json');
+const BOTSTATE_FILE = path.join(DATA_DIR, 'bot_state.json');
 function ensureFiles() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, '[]');
   if (!fs.existsSync(ORDERS_FILE)) fs.writeFileSync(ORDERS_FILE, '[]');
   if (!fs.existsSync(LSESS_FILE)) fs.writeFileSync(LSESS_FILE, '[]');
   if (!fs.existsSync(LAUNCHES_FILE)) fs.writeFileSync(LAUNCHES_FILE, '[]');
+  if (!fs.existsSync(PROMOS_FILE)) fs.writeFileSync(PROMOS_FILE, '[]');
+  if (!fs.existsSync(REDEMPTIONS_FILE)) fs.writeFileSync(REDEMPTIONS_FILE, '[]');
+  if (!fs.existsSync(BOTSTATE_FILE)) fs.writeFileSync(BOTSTATE_FILE, '{}');
 }
 function readJSON(f) { try { return JSON.parse(fs.readFileSync(f, 'utf8') || '[]'); } catch { return []; } }
 function writeJSON(f, d) { fs.writeFileSync(f, JSON.stringify(d, null, 2)); }
@@ -265,6 +330,47 @@ const fileApi = {
   },
   async getLaunches(limit = 50) {
     return readJSON(LAUNCHES_FILE).sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, limit);
+  },
+  // ── промокоды ──
+  async createPromo(p) {
+    const list = readJSON(PROMOS_FILE);
+    list.push({ code: p.code, days: p.days, forever: !!p.forever, maxUses: p.maxUses || 0,
+      uses: 0, target: p.target || '', createdAt: new Date().toISOString() });
+    writeJSON(PROMOS_FILE, list);
+    return p;
+  },
+  async getPromo(code) {
+    return readJSON(PROMOS_FILE).find(x => x.code.toLowerCase() === String(code).toLowerCase()) || null;
+  },
+  async incPromoUses(code) {
+    const list = readJSON(PROMOS_FILE);
+    const i = list.findIndex(x => x.code.toLowerCase() === String(code).toLowerCase());
+    if (i !== -1) { list[i].uses = (list[i].uses || 0) + 1; writeJSON(PROMOS_FILE, list); }
+  },
+  async listPromos(limit = 50) {
+    return readJSON(PROMOS_FILE).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')).slice(0, limit);
+  },
+  async hasRedeemed(code, userId) {
+    return readJSON(REDEMPTIONS_FILE).some(x => x.code.toLowerCase() === String(code).toLowerCase() && x.userId === userId);
+  },
+  async addRedemption(code, userId) {
+    const list = readJSON(REDEMPTIONS_FILE);
+    if (!list.some(x => x.code.toLowerCase() === String(code).toLowerCase() && x.userId === userId)) {
+      list.push({ code, userId, ts: new Date().toISOString() }); writeJSON(REDEMPTIONS_FILE, list);
+    }
+  },
+  // ── состояние визарда бота ──
+  async getBotState(chatId) {
+    const all = readJSON(BOTSTATE_FILE) || {};
+    return all[String(chatId)] || null;
+  },
+  async setBotState(chatId, obj) {
+    let all; try { all = JSON.parse(fs.readFileSync(BOTSTATE_FILE, 'utf8') || '{}'); } catch { all = {}; }
+    all[String(chatId)] = obj; fs.writeFileSync(BOTSTATE_FILE, JSON.stringify(all, null, 2));
+  },
+  async clearBotState(chatId) {
+    let all; try { all = JSON.parse(fs.readFileSync(BOTSTATE_FILE, 'utf8') || '{}'); } catch { all = {}; }
+    delete all[String(chatId)]; fs.writeFileSync(BOTSTATE_FILE, JSON.stringify(all, null, 2));
   }
 };
 

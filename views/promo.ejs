@@ -1,0 +1,26 @@
+<%- include('partials/header', { pageTitle: 'Zephyr - ' + t('promo.title') }) %>
+
+<section class="section narrow">
+  <h2 class="section-title"><%= t('promo.title') %></h2>
+  <p class="muted" style="text-align:center;margin-bottom:22px"><%= t('promo.subtitle') %></p>
+
+  <div class="panel" style="max-width:440px;margin:0 auto">
+    <% if (!user) { %>
+      <div class="notice"><%= t('buy.need_login') %></div>
+      <div class="row-gap" style="margin-top:14px">
+        <a href="/login" class="btn btn-primary"><%= t('nav.login') %></a>
+        <a href="/register" class="btn btn-ghost"><%= t('nav.register') %></a>
+      </div>
+    <% } else { %>
+      <form action="/promo" method="post" class="form">
+        <label class="field">
+          <span><%= t('promo.code_label') %></span>
+          <input type="text" name="code" autocomplete="off" required maxlength="64" placeholder="XXXXXXX">
+        </label>
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:14px"><%= t('promo.redeem_btn') %></button>
+      </form>
+    <% } %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
