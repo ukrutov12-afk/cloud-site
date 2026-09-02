@@ -2085,7 +2085,7 @@ footer {
 }
 
 @keyframes ticker-move {
-  to { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(-25%, 0, 0); }
 }
 
 @keyframes interface-shimmer {
@@ -3047,3 +3047,6 @@ body.page-home .site-bg { display: none; }
 .header-login .hicon { width: 16px; height: 16px; flex: none; }
 .lang-caret { width: 12px; height: 12px; opacity: .68; transition: transform .2s ease; }
 .lang-btn[aria-expanded="true"] .lang-caret { transform: rotate(180deg); }
+.admin-link svg { width: 18px; height: 18px; }
+.header-logout button svg { width: 17px; height: 17px; }
+.button .btn-ico { width: 17px; height: 17px; flex: none; }

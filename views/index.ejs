@@ -22,7 +22,7 @@
 
       <div class="hero-actions reveal reveal-four">
         <a class="button button-primary magnetic" href="/buy"><%= t('hero.cta_buy') %><span aria-hidden="true">→</span></a>
-        <a class="button button-secondary" href="<%= user ? '/account' : '/login' %>"><%= user ? t('nav.account') : t('nav.login') %><span aria-hidden="true">◇</span></a>
+        <a class="button button-secondary" href="<%= user ? '/account' : '/login' %>"><%= user ? t('nav.account') : t('nav.login') %><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14l2.5 5L12 21 2.5 9z"/><path d="M2.5 9h19"/></svg></a>
       </div>
 
       <div class="proof-strip reveal reveal-five">
@@ -50,8 +50,8 @@
 
 <section class="ticker" aria-label="Zephyr highlights">
   <div class="ticker-track">
-    <% [0, 1].forEach(function(group){ %>
-      <div class="ticker-group" <%- group === 1 ? 'aria-hidden="true"' : '' %>>
+    <% [0, 1, 2, 3].forEach(function(group){ %>
+      <div class="ticker-group" <%- group !== 0 ? 'aria-hidden="true"' : '' %>>
         <% tickerItems.forEach(function(item){ %><span><%= item %><i>✦</i></span><% }); %>
       </div>
     <% }); %>

@@ -59,9 +59,9 @@
             <% if (user.avatar) { %><img class="header-user-avatar" src="<%= user.avatar %>" alt=""><% } else { %><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><% } %>
             <span><%= user.username %></span>
           </a>
-          <% if (isAdmin) { %><a href="/admin" class="admin-link" aria-label="Admin">A</a><% } %>
+          <% if (isAdmin) { %><a href="/admin" class="admin-link" aria-label="Admin" title="Admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/></svg></a><% } %>
           <form action="/logout" method="post" class="header-logout">
-            <button type="submit" aria-label="<%= t('nav.logout') %>" title="<%= t('nav.logout') %>">↗</button>
+            <button type="submit" aria-label="<%= t('nav.logout') %>" title="<%= t('nav.logout') %>"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 12H4M11 8l-4 4 4 4"/><path d="M9 4h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H9"/></svg></button>
           </form>
         <% } else { %>
           <a class="header-login" href="/login"><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span><%= t('nav.login') %></span></a>
