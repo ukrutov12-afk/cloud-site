@@ -37,14 +37,17 @@
   <div class="sub-row">
     <% if (sub) { %>
       <div>
-        <div class="sub-name">Zephyr<% if (!sub.forever) { %> (<%= sub.daysLeft %> <%= t('account.days_short') %>)<% } %></div>
+        <div class="sub-name">Zephyr<% if (sub.paused) { %> (<%= t('account.status_paused') %>)<% } else if (!sub.forever) { %> (<%= sub.daysLeft %> <%= t('account.days_short') %>)<% } %></div>
         <div class="muted small">
-          <% if (sub.forever) { %><%= t('account.forever') %><% } else { %><%= t('account.until') %> <%= fdate(sub.until) %><% } %>
+          <% if (sub.forever) { %><%= t('account.forever') %>
+          <% } else if (sub.paused) { %><%= t('account.paused_left') %>: <%= sub.daysLeft %> <%= t('account.days_short') %>
+          <% } else { %><%= t('account.until') %> <%= fdate(sub.until) %><% } %>
         </div>
       </div>
       <div class="sub-right">
-        <span class="sub-status <%= sub.active ? 'on' : 'off' %>"><%= sub.active ? t('account.status_active') : t('account.status_expired') %></span>
-        <% if (!sub.forever) { %><a href="/buy" class="btn btn-primary sub-renew"><%= t('account.renew') %></a><% } %>
+        <% if (sub.paused) { %><span class="sub-status off"><%= t('account.status_paused') %></span>
+        <% } else { %><span class="sub-status <%= sub.active ? 'on' : 'off' %>"><%= sub.active ? t('account.status_active') : t('account.status_expired') %></span><% } %>
+        <% if (!sub.forever && !sub.paused) { %><a href="/buy" class="btn btn-primary sub-renew"><%= t('account.renew') %></a><% } %>
       </div>
     <% } else { %>
       <div><div class="sub-name muted"><%= t('account.no_sub') %></div></div>
@@ -63,7 +66,9 @@
       login:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
       mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/></svg>',
       cal:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>',
-      hwid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>'
+      hwid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+      freeze: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M3.5 7l17 10M20.5 7l-17 10M12 5l-3 2 3 2 3-2zM12 19l-3-2 3-2 3 2z"/></svg>',
+      reset: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v5h-5"/></svg>'
     };
   %>
   <div class="data-list">
@@ -73,6 +78,8 @@
     <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.mail %></i><%= t('account.email') %></span><span class="dr-v"><%= account.email %></span></div>
     <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.cal %></i><%= t('account.registered') %></span><span class="dr-v"><%= fdate(account.createdAt) %></span></div>
     <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.hwid %></i><%= t('account.hwid') %></span><span class="dr-v mono"><%= account.hwid || ('- ' + t('account.hwid_none')) %></span></div>
+    <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.freeze %></i><%= t('account.freezes') %></span><span class="dr-v"><%= account.freezes || 0 %></span></div>
+    <div class="data-row"><span class="dr-k"><i class="dr-i"><%- ico.reset %></i><%= t('account.hwid_resets') %></span><span class="dr-v"><%= account.hwidResets || 0 %></span></div>
   </div>
 
   <hr class="prof-hr">
@@ -82,8 +89,12 @@
     <a href="#" class="btn btn-ghost act-btn"><%= t('account.btn_download') %></a>
     <form action="/account/soon" method="post"><button class="btn btn-ghost act-btn"><%= t('account.btn_key') %></button></form>
     <button type="button" class="btn btn-ghost act-btn" id="passToggle"><%= t('account.btn_pass') %></button>
-    <form action="/account/hwid/reset" method="post"><button class="btn btn-ghost act-btn"><%= t('account.btn_hwid') %></button></form>
-    <form action="/account/soon" method="post"><button class="btn btn-ghost act-btn"><%= t('account.btn_freeze') %></button></form>
+    <form action="/account/hwid/reset" method="post"><button class="btn btn-ghost act-btn" <%= ((account.hwidResets||0) < 1 || !account.hwid) ? 'disabled' : '' %>><%= t('account.btn_hwid') %> (<%= account.hwidResets || 0 %>)</button></form>
+    <% if (account.frozen) { %>
+      <form action="/account/unfreeze" method="post"><button class="btn btn-primary act-btn"><%= t('account.btn_unfreeze') %></button></form>
+    <% } else { %>
+      <form action="/account/freeze" method="post"><button class="btn btn-ghost act-btn" <%= (account.freezes||0) < 1 ? 'disabled' : '' %>><%= t('account.btn_freeze') %> (<%= account.freezes || 0 %>)</button></form>
+    <% } %>
     <form action="/account/soon" method="post"><button class="btn btn-ghost act-btn"><%= t('account.btn_2fa') %></button></form>
   </div>
 

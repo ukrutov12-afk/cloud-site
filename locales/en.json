@@ -39,15 +39,35 @@
     "per_month": "/ mo",
     "buy_btn": "Buy",
     "month_t": "Month",
-    "month_f": ["All modules", "All updates this month", "Discord support"],
+    "month_f": [
+      "All modules",
+      "All updates this month",
+      "Discord support"
+    ],
     "season_t": "3 months",
-    "season_f": ["All modules", "Priority updates", "Priority support"],
+    "season_f": [
+      "All modules",
+      "Priority updates",
+      "Priority support"
+    ],
     "halfyear_t": "180 days",
-    "halfyear_f": ["All modules", "Priority updates", "Extended support"],
+    "halfyear_f": [
+      "All modules",
+      "Priority updates",
+      "Extended support"
+    ],
     "lifetime_t": "Lifetime",
-    "lifetime_f": ["All modules forever", "All future updates", "VIP support"],
+    "lifetime_f": [
+      "All modules forever",
+      "All future updates",
+      "VIP support"
+    ],
     "lifetime_beta_t": "Lifetime + Beta",
-    "lifetime_beta_f": ["Everything in Lifetime", "Beta test access", "Early builds and new features"]
+    "lifetime_beta_f": [
+      "Everything in Lifetime",
+      "Beta test access",
+      "Early builds and new features"
+    ]
   },
   "buy": {
     "title": "Checkout",
@@ -128,7 +148,20 @@
     "btn_avatar": "Change avatar",
     "avatar_ok": "Avatar updated.",
     "avatar_err": "Could not upload avatar (image up to 6 MB required).",
-    "no_plan": "No active subscription"
+    "no_plan": "No active subscription",
+    "freezes": "Freezes",
+    "hwid_resets": "HWID resets",
+    "btn_unfreeze": "Unfreeze",
+    "status_paused": "Paused",
+    "paused_left": "Left after unfreeze",
+    "already_frozen": "Subscription is already frozen.",
+    "freeze_na": "Freeze is not available for this plan.",
+    "freeze_no_sub": "No active subscription to freeze.",
+    "no_freeze": "No freezes — buy one in the store.",
+    "no_hwid_reset": "No HWID resets — buy one in the store.",
+    "hwid_none_flash": "HWID is not linked — nothing to reset.",
+    "frozen_ok": "Subscription frozen.",
+    "unfrozen_ok": "Subscription unfrozen."
   },
   "support": {
     "title": "Support",

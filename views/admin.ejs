@@ -51,7 +51,7 @@
               <td class="muted"><%= u.email %></td>
               <td class="mono small" title="<%= u.hwid || '' %>"><%= u.hwid ? (u.hwid.slice(0,12) + '…') : '—' %></td>
               <td><%= subTxt %></td>
-              <td><% if (banned) { %><span class="status status-pending">БАН <%= banTxt %></span><% } else { %><span class="muted small">ок</span><% } %></td>
+              <td><% if (banned) { %><span class="status status-pending">БАН <%= banTxt %></span><% } else if (u.frozen) { %><span class="status status-pending">⏸ пауза</span><% } else { %><span class="muted small">ок</span><% } %></td>
               <td><% if (isAdminFn(u)) { %><span class="admin-badge">ADMIN</span><% } else { %><span class="muted small">user</span><% } %></td>
               <td>
                 <div class="grant-form">
@@ -76,6 +76,15 @@
                   <% if (u.hwid) { %>
                     <form action="/admin/hwid/<%= u.id %>/reset" method="post" style="margin:0" onsubmit="return confirm('Сбросить HWID у <%= u.username %>?')">
                       <button type="submit" class="btn-mini ghost" title="сбросить привязку HWID">HWID ✕</button>
+                    </form>
+                  <% } %>
+                  <% if (u.frozen) { %>
+                    <form action="/admin/unfreeze/<%= u.id %>" method="post" style="margin:0">
+                      <button type="submit" class="btn-mini ghost" title="разморозить подписку">▶ размор.</button>
+                    </form>
+                  <% } else { %>
+                    <form action="/admin/freeze/<%= u.id %>" method="post" style="margin:0">
+                      <button type="submit" class="btn-mini ghost" title="заморозить подписку">⏸ замор.</button>
                     </form>
                   <% } %>
                 </div>

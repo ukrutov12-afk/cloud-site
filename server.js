@@ -123,6 +123,27 @@ async function applySub(userId, planLabel, days) {
   }
 }
 
+// ─────────── Расходники (заморозка / сброс HWID) ───────────
+const FREEZE_PRICE = 89;
+const HWID_RESET_PRICE = 149;
+// что идёт в подарок с тарифом
+const PLAN_GIFTS = {
+  season:        { freezes: 1, hwidResets: 0 },
+  halfyear:      { freezes: 1, hwidResets: 1 },
+  lifetime:      { freezes: 0, hwidResets: 2 },
+  lifetime_beta: { freezes: 0, hwidResets: 2 }
+};
+async function grantGifts(userId, planId) {
+  const g = PLAN_GIFTS[planId];
+  if (!g) return;
+  const u = await db.findById(userId);
+  if (!u) return;
+  await db.updateUser(userId, {
+    freezes: (u.freezes || 0) + g.freezes,
+    hwidResets: (u.hwidResets || 0) + g.hwidResets
+  });
+}
+
 // ─────────────────────────── Админы ───────────────────────────
 // ADMIN_EMAILS = список email через запятую (в окружении Render). Админ
 // определяется ТОЛЬКО по почте — ник не важен. (ADMIN_USERS поддержан как
@@ -263,6 +284,7 @@ app.post('/api/launcher/auth', async (req, res) => {
       return res.status(401).json({ ok: false, message: 'Неверный логин или пароль.' });
     }
     if (isBanned(user)) return res.status(403).json({ ok: false, message: banMessage(user) });
+    if (user.frozen) return res.status(403).json({ ok: false, message: 'Подписка заморожена. Разморозь в кабинете.' });
     if (!subActive(user)) return res.status(403).json({ ok: false, message: 'Нет активной подписки.' });
 
     // HWID-замок: первый вход привязывает, дальше обязан совпасть.
@@ -288,6 +310,7 @@ app.post('/api/launcher/launch', async (req, res) => {
     const user = await db.findById(sess.userId);
     if (!user) return res.status(401).json({ ok: false });
     if (isBanned(user)) return res.status(403).json({ ok: false, message: banMessage(user) });
+    if (user.frozen) return res.status(403).json({ ok: false, message: 'Подписка заморожена.' });
 
     const uid = accountUid(user);
     await db.recordLaunch({ userId: user.id, uid, hwid: sess.hwid });
@@ -321,6 +344,7 @@ app.post('/buy', requireAuth, async (req, res, next) => {
     const plan = PLANS[req.body.plan] || PLANS.lifetime;
     await db.createOrder({ userId: req.session.userId, plan: plan.id, price: plan.price, currency: plan.currency });
     await applySub(req.session.userId, plan.id, planDays(plan.id));
+    await grantGifts(req.session.userId, plan.id); // подарки: заморозки / сбросы HWID
     flash(req, 'success', 'buy.order_created');
     res.redirect('/account');
   } catch (e) { next(e); }
@@ -418,6 +442,7 @@ app.post('/logout', (req, res) => {
 
 function subView(user, admin) {
   if (admin) return { active: true, forever: true, plan: 'lifetime' };
+  if (user.frozen) return { active: false, forever: false, paused: true, plan: user.subPlan, daysLeft: user.frozenDays || 0 };
   if (user.subForever) return { active: true, forever: true, plan: user.subPlan || 'lifetime' };
   if (user.subUntil) {
     const until = new Date(user.subUntil), now = effectiveNow();
@@ -471,11 +496,41 @@ app.post('/account/avatar', requireAuth, upload.single('avatar'), async (req, re
   res.redirect('/account');
 });
 
-// сброс HWID
+// сброс HWID — тратит расходник (куплен за 149 или подарок с тарифа)
 app.post('/account/hwid/reset', requireAuth, async (req, res, next) => {
   try {
-    await db.updateUser(req.session.userId, { hwid: null });
+    const u = await db.findById(req.session.userId);
+    if (!u.hwid) { flash(req, 'error', 'account.hwid_none_flash'); return res.redirect('/account'); }
+    if ((u.hwidResets || 0) < 1) { flash(req, 'error', 'account.no_hwid_reset'); return res.redirect('/account'); }
+    await db.updateUser(u.id, { hwid: null, hwidResets: u.hwidResets - 1 });
     flash(req, 'success', 'account.hwid_reset');
+    res.redirect('/account');
+  } catch (e) { next(e); }
+});
+
+// заморозить подписку — тратит расходник; счёт дней встаёт, играть нельзя
+app.post('/account/freeze', requireAuth, async (req, res, next) => {
+  try {
+    const u = await db.findById(req.session.userId);
+    if (u.frozen) { flash(req, 'error', 'account.already_frozen'); return res.redirect('/account'); }
+    if (isAdmin(u) || u.subForever) { flash(req, 'error', 'account.freeze_na'); return res.redirect('/account'); }
+    if (!u.subUntil || new Date(u.subUntil) <= effectiveNow()) { flash(req, 'error', 'account.freeze_no_sub'); return res.redirect('/account'); }
+    if ((u.freezes || 0) < 1) { flash(req, 'error', 'account.no_freeze'); return res.redirect('/account'); }
+    const days = Math.max(0, Math.ceil((new Date(u.subUntil) - effectiveNow()) / 86400000));
+    await db.updateUser(u.id, { frozen: true, frozenDays: days, freezes: u.freezes - 1 });
+    flash(req, 'success', 'account.frozen_ok');
+    res.redirect('/account');
+  } catch (e) { next(e); }
+});
+
+// разморозить — бесплатно; оставшиеся дни отсчитываются заново от текущего момента
+app.post('/account/unfreeze', requireAuth, async (req, res, next) => {
+  try {
+    const u = await db.findById(req.session.userId);
+    if (!u.frozen) return res.redirect('/account');
+    const until = new Date(effectiveNow().getTime() + (u.frozenDays || 0) * 86400000);
+    await db.updateUser(u.id, { frozen: false, frozenDays: 0, subUntil: until.toISOString(), subForever: false });
+    flash(req, 'success', 'account.unfrozen_ok');
     res.redirect('/account');
   } catch (e) { next(e); }
 });
@@ -579,6 +634,29 @@ app.post('/admin/unban/:userId', requireAdmin, async (req, res, next) => {
 app.post('/admin/hwid/:userId/reset', requireAdmin, async (req, res, next) => {
   try {
     await db.updateUser(req.params.userId, { hwid: null });
+    res.redirect('/admin');
+  } catch (e) { next(e); }
+});
+
+// заморозить/разморозить подписку юзера (админ, без расходника)
+app.post('/admin/freeze/:userId', requireAdmin, async (req, res, next) => {
+  try {
+    const u = await db.findById(req.params.userId);
+    if (!u || u.frozen) return res.redirect('/admin');
+    const days = (!u.subForever && u.subUntil)
+      ? Math.max(0, Math.ceil((new Date(u.subUntil) - effectiveNow()) / 86400000)) : 0;
+    await db.updateUser(u.id, { frozen: true, frozenDays: days });
+    res.redirect('/admin');
+  } catch (e) { next(e); }
+});
+app.post('/admin/unfreeze/:userId', requireAdmin, async (req, res, next) => {
+  try {
+    const u = await db.findById(req.params.userId);
+    if (!u || !u.frozen) return res.redirect('/admin');
+    const patch = { frozen: false, frozenDays: 0 };
+    if (!u.subForever && u.frozenDays)
+      patch.subUntil = new Date(effectiveNow().getTime() + u.frozenDays * 86400000).toISOString();
+    await db.updateUser(u.id, patch);
     res.redirect('/admin');
   } catch (e) { next(e); }
 });
