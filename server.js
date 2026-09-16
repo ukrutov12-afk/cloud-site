@@ -496,6 +496,7 @@ app.post('/api/launcher/auth', async (req, res) => {
     const token = await db.createLauncherSession({ userId: user.id, hwid: user.hwid });
     const resp = { ok: true, token, uid: accountUid(user), username: user.username };
     if (BUILD_KEY_B64) resp.key = BUILD_KEY_B64; // ключ сессии для расшифровки классов
+    if (PROTECT_SECRET) resp.protectSecret = PROTECT_SECRET; // секрет отчётов защиты — лаунчер прокинет игре
     res.json(resp);
   } catch (e) { console.error(e); res.status(500).json({ ok: false, message: 'Ошибка сервера.' }); }
 });
