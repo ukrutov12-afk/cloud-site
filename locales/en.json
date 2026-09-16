@@ -254,5 +254,32 @@
     "login_desc": "Enter the 6-digit code from Google Authenticator.",
     "verify": "Confirm",
     "manage": "Manage 2FA"
+  },
+  "design": {
+    "theme": "Accent theme",
+    "violet": "Violet",
+    "ice": "Ice",
+    "acid": "Acid",
+    "ember": "Ember",
+    "skip": "Skip to content",
+    "privacy": "Privacy",
+    "preview": "Inside Zephyr",
+    "preview_title": "Designed to feel different.",
+    "preview_desc": "A look at the client and its launcher.",
+    "previous": "Previous screenshot",
+    "next": "Next screenshot",
+    "client_screen": "Client main menu",
+    "launcher_screen": "Launcher",
+    "development": "Development capture · interface may change",
+    "access": "Zephyr access",
+    "online": "System online",
+    "performance": "Performance",
+    "lightweight": "Lightweight interface",
+    "profiles": "Profiles",
+    "personal": "Your own setup",
+    "explore": "Explore the client",
+    "start": "Quick start",
+    "ready": "Your next session.",
+    "launch": "Make it Zephyr."
   }
 }

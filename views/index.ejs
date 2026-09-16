@@ -39,13 +39,13 @@
       <div class="hero-logo-card">
         <div class="logo-halo" aria-hidden="true"></div>
         <img src="/img/zephyr-avatar.jpg" alt="Zephyr crystal logo">
-        <div class="logo-card-caption"><span><i aria-hidden="true"></i>System online</span><b>Zephyr / 1.21.11</b></div>
+        <div class="logo-card-caption"><span><i aria-hidden="true"></i><%= t('design.online') %></span><b>Zephyr / 1.21.11</b></div>
       </div>
-      <div class="floating-card floating-card-one"><span class="mini-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 16a8 8 0 1 1 14 0"></path><path d="m12 13 4-4"></path><circle cx="12" cy="13" r="1.25"></circle></svg></span><span><small>Performance</small><strong>FPS friendly</strong></span></div>
-      <div class="floating-card floating-card-two"><span class="mini-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h8M16 7h4M4 17h3M11 17h9"></path><circle cx="14" cy="7" r="2"></circle><circle cx="9" cy="17" r="2"></circle></svg></span><span><small>Profiles</small><strong>Built around you</strong></span></div>
+      <div class="floating-card floating-card-one"><span class="mini-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 16a8 8 0 1 1 14 0"></path><path d="m12 13 4-4"></path><circle cx="12" cy="13" r="1.25"></circle></svg></span><span><small><%= t('design.performance') %></small><strong><%= t('design.lightweight') %></strong></span></div>
+      <div class="floating-card floating-card-two"><span class="mini-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h8M16 7h4M4 17h3M11 17h9"></path><circle cx="14" cy="7" r="2"></circle><circle cx="9" cy="17" r="2"></circle></svg></span><span><small><%= t('design.profiles') %></small><strong><%= t('design.personal') %></strong></span></div>
     </div>
   </div>
-  <a class="scroll-hint" href="#features" aria-label="Scroll"><span>SCROLL TO EXPLORE</span><i aria-hidden="true"></i></a>
+  <a class="scroll-hint" href="#features" aria-label="Scroll"><span><%= t('design.explore') %></span><i aria-hidden="true"></i></a>
 </section>
 
 <section class="ticker" aria-label="Zephyr highlights">
@@ -76,8 +76,25 @@
   </div>
 </section>
 
+<section class="product-media section-shell" id="preview" data-carousel aria-label="<%= t('design.preview') %>">
+  <div class="section-kicker"><span>02</span><%= t('design.preview') %></div>
+  <div class="section-heading">
+    <div><h2><%= t('design.preview_title') %></h2><p><%= t('design.preview_desc') %></p></div>
+    <div class="media-controls">
+      <button type="button" data-carousel-prev aria-label="<%= t('design.previous') %>">←</button>
+      <span class="media-count" aria-live="polite" data-carousel-count>01 / 02</span>
+      <button type="button" data-carousel-next aria-label="<%= t('design.next') %>">→</button>
+    </div>
+  </div>
+  <div class="media-window" tabindex="0" aria-label="<%= t('design.preview') %>">
+    <div class="media-bar"><span class="media-lights" aria-hidden="true"><i></i><i></i><i></i></span><span>ZEPHYR / 1.21.11</span><span aria-hidden="true">↗</span></div>
+    <figure class="media-slide" data-slide><img src="/img/client-preview.png" width="2048" height="857" alt="<%= t('design.client_screen') %>" loading="lazy"><figcaption><strong><%= t('design.client_screen') %></strong><span><%= t('design.development') %></span></figcaption></figure>
+    <figure class="media-slide" data-slide hidden><img src="/img/launcher-preview.png" width="1280" height="720" alt="<%= t('design.launcher_screen') %>" loading="lazy"><figcaption><strong><%= t('design.launcher_screen') %></strong><span><%= t('design.access') %></span></figcaption></figure>
+  </div>
+</section>
+
 <section class="steps section-shell">
-  <div class="section-kicker"><span>02</span>Quick start</div>
+  <div class="section-kicker"><span>02</span><%= t('design.start') %></div>
   <div class="section-heading compact"><h2><%= t('buy.title') %>.</h2><p><%= t('pricing.subtitle') %></p></div>
   <div class="step-grid">
     <article><span>01</span><div><h3><%= t('buy.choose_plan') %></h3><p><%= t('pricing.subtitle') %></p></div></article>
@@ -93,7 +110,7 @@
     <% ['month','season','halfyear','lifetime','lifetime_beta'].forEach(function(id){ var p=plans[id]; var list=t('pricing.'+id+'_f'); %>
       <article class="price-card <%= p.popular ? 'popular' : '' %> reveal-on-scroll">
         <% if (p.popular) { %><span class="popular-label"><%= t('pricing.most_popular') %></span><% } %>
-        <div class="plan-title"><span><%= t('pricing.'+id+'_t') %></span><small>Zephyr access</small></div>
+        <div class="plan-title"><span><%= t('pricing.'+id+'_t') %></span><small><%= t('design.access') %></small></div>
         <% var pv = priceView(p.price); %>
         <div class="plan-price"><%= pv.final.toLocaleString('ru-RU') %> ₽<% if (pv.pct) { %> <s style="opacity:.45;font-size:.62em;font-weight:500"><%= pv.base.toLocaleString('ru-RU') %></s> <span style="color:var(--accent,#8f6dfa);font-size:.6em;font-weight:700;vertical-align:middle">−<%= pv.pct %>%</span><% } %></div>
         <div class="plan-period"><%= id === 'month' ? '30 days' : id === 'season' ? '90 days' : id === 'halfyear' ? '180 days' : 'lifetime' %></div>
@@ -126,7 +143,7 @@
   <div class="final-glow" aria-hidden="true"></div>
   <span class="shard final-shard-one" aria-hidden="true"></span><span class="shard final-shard-two" aria-hidden="true"></span>
   <div class="final-logo"><img src="/img/zephyr-avatar.jpg" alt="Zephyr"></div>
-  <p>Ready?</p><h2>Launch Zephyr.</h2><span class="final-text"><%= t('pricing.subtitle') %></span>
+  <p><%= t('design.ready') %></p><h2><%= t('design.launch') %></h2><span class="final-text"><%= t('pricing.subtitle') %></span>
   <div class="final-actions"><a class="button button-primary magnetic" href="/buy"><%= t('hero.cta_buy') %><span>→</span></a><a class="button button-secondary" href="/support"><%= t('nav.support') %></a></div>
 </section>
 

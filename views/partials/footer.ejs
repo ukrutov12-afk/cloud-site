@@ -11,11 +11,15 @@
         <a href="/buy"><%= t('nav.buy') %></a>
         <a href="/docs/terms"><%= t('nav.docs') %></a>
         <a href="/support"><%= t('nav.support') %></a>
+        <a href="/account"><%= t('nav.account') %></a>
+        <a href="/docs/privacy"><%= t('design.privacy') %></a>
       </nav>
+      <div class="footer-social"><a href="<%= contacts.telegram %>" target="_blank" rel="noopener noreferrer">Telegram ↗</a><button class="copy-contact" type="button" data-copy="<%= contacts.discordUser %>"><span>Discord</span><b><%= contacts.discordUser %></b></button></div>
       <span>© <%= new Date().getFullYear() %> Zephyr Client</span>
     </div>
   </footer>
 
   <script src="/js/main.js"></script>
+  <script src="/js/design.js"></script>
 </body>
 </html>

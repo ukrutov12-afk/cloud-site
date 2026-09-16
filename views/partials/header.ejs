@@ -15,9 +15,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="/js/theme.js"></script>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/themes.css">
+  <link rel="stylesheet" href="/css/zephyr.css">
 </head>
 <body class="page-<%= page %>">
+  <a class="skip-link" href="#main-content"><%= t('design.skip') %></a>
   <div class="site-bg" aria-hidden="true">
     <span class="sb-glow sb-glow-1"></span>
     <span class="sb-glow sb-glow-2"></span>
@@ -40,6 +44,11 @@
       </nav>
 
       <div class="header-actions">
+        <div class="theme-picker" role="group" aria-label="<%= t('design.theme') %>">
+          <% ['violet','ice','acid','ember'].forEach(function(theme){ %>
+            <button class="theme-choice" type="button" data-theme-choice="<%= theme %>" aria-label="<%= t('design.' + theme) %>" title="<%= t('design.' + theme) %>" aria-pressed="false"></button>
+          <% }); %>
+        </div>
         <div class="lang">
           <button class="lang-btn" type="button" aria-haspopup="true" aria-expanded="false">
             <span><%= lang.toUpperCase() %></span><svg class="lang-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
@@ -83,4 +92,4 @@
     <div class="flash flash-<%= flash.type %>" role="status"><%= t(flash.key) %></div>
   <% } %>
 
-  <main class="site-main">
+  <main class="site-main" id="main-content">
