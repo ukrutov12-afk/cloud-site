@@ -26,3 +26,15 @@ services:
         sync: false
       - key: TG_CHAT_ID
         sync: false
+      # Секрет вебхука бота (setWebhook secret_token) — иначе payload подделывается.
+      - key: TG_WEBHOOK_SECRET
+        sync: false
+      # Кто нажимает кнопки инцидентов (по умолчанию = TG_CHAT_ID).
+      - key: TG_ADMIN_ID
+        sync: false
+      # Класс-стриминг (трек-A): ключ билда для расшифровки классов.
+      - key: ZEPHYR_BUILD_KEY
+        sync: false
+      # Защита клиента: секрет приёма инцидентов (заголовок X-Zephyr-Secret).
+      - key: ZEPHYR_PROTECT_SECRET
+        sync: false

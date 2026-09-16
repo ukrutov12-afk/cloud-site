@@ -55,6 +55,10 @@ async function initPg() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS frozen_days INTEGER DEFAULT 0;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret  TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN DEFAULT false;
+    -- защита: пометка «под подозрением» и тихий карантин (всегда подменённые классы)
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS flagged      BOOLEAN DEFAULT false;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS quarantine   BOOLEAN DEFAULT false;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS flag_note    TEXT;
   `);
   // Лаунчер: сессии (токен на запуск) и статистика запусков.
   // В launches СОЗНАТЕЛЬНО нет колонки ip — только аккаунт, HWID, время.
@@ -98,12 +102,35 @@ async function initPg() {
       user_chat_id TEXT NOT NULL,
       ts           TIMESTAMPTZ NOT NULL DEFAULT now()
     );
+    -- Инциденты защиты: что клиент увидел у себя под ногами.
+    -- Решение по инциденту принимается ВРУЧНУЮ из бота, поэтому здесь хранится
+    -- и сам факт, и то, чем он кончился — иначе по повторам не разобраться.
+    CREATE TABLE IF NOT EXISTS incidents (
+      id       TEXT PRIMARY KEY,
+      user_id  TEXT NOT NULL,
+      uid      INTEGER,
+      hwid     TEXT,
+      kind     TEXT NOT NULL,
+      detail   TEXT,
+      version  TEXT,
+      action   TEXT,
+      ts       TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS incidents_user_ts ON incidents (user_id, ts DESC);
   `);
   // тип промика: 'days' (ключ на подписку) или 'discount' (скидка %)
   await pg.query(`
     ALTER TABLE promos ADD COLUMN IF NOT EXISTS kind    TEXT DEFAULT 'days';
     ALTER TABLE promos ADD COLUMN IF NOT EXISTS percent INTEGER DEFAULT 0;
   `);
+}
+/** Строка инцидента -> объект. Отдельно, потому что читают и pgApi, и админка. */
+function rowIncident(r) {
+  return {
+    id: r.id, userId: r.user_id, uid: r.uid, hwid: r.hwid,
+    kind: r.kind, detail: r.detail, version: r.version, action: r.action,
+    ts: r.ts instanceof Date ? r.ts.toISOString() : r.ts
+  };
 }
 function rowUser(r) {
   if (!r) return null;
@@ -118,6 +145,9 @@ function rowUser(r) {
     hwidResets: r.hwid_resets || 0,
     frozen: !!r.frozen,
     frozenDays: r.frozen_days || 0,
+    flagged: !!r.flagged,
+    quarantine: !!r.quarantine,
+    flagNote: r.flag_note || '',
     totpSecret: r.totp_secret || null,
     totpEnabled: !!r.totp_enabled,
     createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at
@@ -126,7 +156,8 @@ function rowUser(r) {
 const USER_COLS = { plan: 'plan', hwid: 'hwid', uid: 'uid', passwordHash: 'password_hash',
   subPlan: 'sub_plan', subUntil: 'sub_until', subForever: 'sub_forever', avatar: 'avatar',
   bannedUntil: 'banned_until', freezes: 'freezes', hwidResets: 'hwid_resets',
-  frozen: 'frozen', frozenDays: 'frozen_days', totpSecret: 'totp_secret', totpEnabled: 'totp_enabled' };
+  frozen: 'frozen', frozenDays: 'frozen_days', totpSecret: 'totp_secret', totpEnabled: 'totp_enabled',
+  flagged: 'flagged', quarantine: 'quarantine', flagNote: 'flag_note' };
 function rowOrder(r) {
   return r && {
     id: r.id, userId: r.user_id, plan: r.plan, price: Number(r.price), currency: r.currency,
@@ -211,6 +242,26 @@ const pgApi = {
     return rows.map(r => ({ id: r.id, userId: r.user_id, uid: r.uid, hwid: r.hwid,
       ts: r.ts instanceof Date ? r.ts.toISOString() : r.ts }));
   },
+  // ── инциденты защиты ──
+  async recordIncident({ userId, uid, hwid, kind, detail, version }) {
+    const id = newId('i');
+    await pg.query(
+      'INSERT INTO incidents (id, user_id, uid, hwid, kind, detail, version) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+      [id, userId, uid, hwid, kind, detail || '', version || '']);
+    const { rows } = await pg.query('SELECT COUNT(*)::int AS n FROM incidents WHERE user_id=$1', [userId]);
+    return { id, total: rows[0] ? rows[0].n : 1 };
+  },
+  async getIncident(id) {
+    const { rows } = await pg.query('SELECT * FROM incidents WHERE id=$1', [id]);
+    return rows[0] ? rowIncident(rows[0]) : null;
+  },
+  async getIncidents(limit = 50) {
+    const { rows } = await pg.query('SELECT * FROM incidents ORDER BY ts DESC LIMIT $1', [limit]);
+    return rows.map(rowIncident);
+  },
+  async setIncidentAction(id, action) {
+    await pg.query('UPDATE incidents SET action=$2 WHERE id=$1', [id, action]);
+  },
   // ── промокоды ──
   async createPromo(p) {
     await pg.query(
@@ -271,6 +322,7 @@ const PROMOS_FILE = path.join(DATA_DIR, 'promos.json');
 const REDEMPTIONS_FILE = path.join(DATA_DIR, 'promo_redemptions.json');
 const BOTSTATE_FILE = path.join(DATA_DIR, 'bot_state.json');
 const SUPPORT_FILE = path.join(DATA_DIR, 'support_threads.json');
+const INCIDENTS_FILE = path.join(DATA_DIR, 'incidents.json');
 function ensureFiles() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, '[]');
@@ -281,6 +333,7 @@ function ensureFiles() {
   if (!fs.existsSync(REDEMPTIONS_FILE)) fs.writeFileSync(REDEMPTIONS_FILE, '[]');
   if (!fs.existsSync(BOTSTATE_FILE)) fs.writeFileSync(BOTSTATE_FILE, '{}');
   if (!fs.existsSync(SUPPORT_FILE)) fs.writeFileSync(SUPPORT_FILE, '{}');
+  if (!fs.existsSync(INCIDENTS_FILE)) fs.writeFileSync(INCIDENTS_FILE, '[]');
 }
 function readJSON(f) { try { return JSON.parse(fs.readFileSync(f, 'utf8') || '[]'); } catch { return []; } }
 function writeJSON(f, d) { fs.writeFileSync(f, JSON.stringify(d, null, 2)); }
@@ -356,6 +409,24 @@ const fileApi = {
   },
   async getLaunches(limit = 50) {
     return readJSON(LAUNCHES_FILE).sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, limit);
+  },
+  // ── инциденты защиты ──
+  async recordIncident({ userId, uid, hwid, kind, detail, version }) {
+    const all = readJSON(INCIDENTS_FILE);
+    const id = newId('i');
+    all.push({ id, userId, uid, hwid, kind, detail: detail || '', version: version || '',
+      action: null, ts: new Date().toISOString() });
+    writeJSON(INCIDENTS_FILE, all);
+    return { id, total: all.filter(x => x.userId === userId).length };
+  },
+  async getIncident(id) { return readJSON(INCIDENTS_FILE).find(x => x.id === id) || null; },
+  async getIncidents(limit = 50) {
+    return readJSON(INCIDENTS_FILE).sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, limit);
+  },
+  async setIncidentAction(id, action) {
+    const all = readJSON(INCIDENTS_FILE);
+    const it = all.find(x => x.id === id);
+    if (it) { it.action = action; writeJSON(INCIDENTS_FILE, all); }
   },
   // ── промокоды ──
   async createPromo(p) {

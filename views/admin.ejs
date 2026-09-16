@@ -51,7 +51,13 @@
               <td class="muted"><%= u.email %></td>
               <td class="mono small" title="<%= u.hwid || '' %>"><%= u.hwid ? (u.hwid.slice(0,12) + '…') : '—' %></td>
               <td><%= subTxt %></td>
-              <td><% if (banned) { %><span class="status status-pending">БАН <%= banTxt %></span><% } else if (u.frozen) { %><span class="status status-pending">⏸ пауза</span><% } else { %><span class="muted small">ок</span><% } %></td>
+              <td>
+                <% if (banned) { %><span class="status status-pending">БАН <%= banTxt %></span>
+                <% } else if (u.frozen) { %><span class="status status-pending">⏸ пауза</span>
+                <% } else { %><span class="muted small">ок</span><% } %>
+                <% if (u.quarantine) { %><span class="status status-pending" title="тихий карантин — отдаём подменённые классы">🕳 карантин</span>
+                <% } else if (u.flagged) { %><span class="status status-pending" title="под подозрением">⚠ флаг</span><% } %>
+              </td>
               <td><% if (isAdminFn(u)) { %><span class="admin-badge">ADMIN</span><% } else { %><span class="muted small">user</span><% } %></td>
               <td>
                 <div class="grant-form">
@@ -87,6 +93,28 @@
                       <button type="submit" class="btn-mini ghost" title="заморозить подписку">⏸ замор.</button>
                     </form>
                   <% } %>
+                  <% if (u.flagged) { %>
+                    <form action="/admin/flag/<%= u.id %>" method="post" style="margin:0">
+                      <input type="hidden" name="on" value="0">
+                      <button type="submit" class="btn-mini ghost" title="снять метку подозрения">⚑ снять флаг</button>
+                    </form>
+                  <% } else { %>
+                    <form action="/admin/flag/<%= u.id %>" method="post" style="margin:0">
+                      <input type="hidden" name="on" value="1">
+                      <button type="submit" class="btn-mini ghost" title="пометить как подозрительного">⚑ флаг</button>
+                    </form>
+                  <% } %>
+                  <% if (u.quarantine) { %>
+                    <form action="/admin/quarantine/<%= u.id %>" method="post" style="margin:0">
+                      <input type="hidden" name="on" value="0">
+                      <button type="submit" class="btn-mini ghost" title="выключить тихий карантин">🕳 из карантина</button>
+                    </form>
+                  <% } else { %>
+                    <form action="/admin/quarantine/<%= u.id %>" method="post" style="margin:0" onsubmit="return confirm('Включить тихий карантин для <%= u.username %>? Клиент будет получать подменённые классы.')">
+                      <input type="hidden" name="on" value="1">
+                      <button type="submit" class="btn-mini danger" title="тихий карантин: подменённые классы">🕳 карантин</button>
+                    </form>
+                  <% } %>
                 </div>
               </td>
             </tr>
@@ -112,6 +140,29 @@
             </tr>
           <% }); %>
           <% if (!launches.length) { %><tr><td colspan="3" class="muted">Пока пусто</td></tr><% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- инциденты защиты -->
+  <div class="panel" style="margin-bottom:22px">
+    <h3 class="panel-h">Инциденты защиты (<%= incidents.length %> последних)</h3>
+    <div class="tbl-wrap">
+      <table class="admin-tbl">
+        <thead><tr><th>Когда</th><th>Что</th><th>UID</th><th>HWID</th><th>Детали</th><th>Решение</th></tr></thead>
+        <tbody>
+          <% incidents.forEach(function(it){ %>
+            <tr>
+              <td class="muted small"><%= new Date(it.ts).toLocaleString('ru-RU',{timeZone:'Europe/Moscow'}) %></td>
+              <td><%= incidentKindFn(it.kind) %></td>
+              <td><%= it.uid %></td>
+              <td class="mono small" title="<%= it.hwid || '' %>"><%= it.hwid ? (it.hwid.slice(0,16) + '…') : '—' %></td>
+              <td class="muted small"><%= it.detail || '—' %><% if (it.version) { %> · v<%= it.version %><% } %></td>
+              <td><% if (it.action) { %><span class="status status-pending"><%= it.action %></span><% } else { %><span class="muted small">ожидает</span><% } %></td>
+            </tr>
+          <% }); %>
+          <% if (!incidents.length) { %><tr><td colspan="6" class="muted">Пока чисто</td></tr><% } %>
         </tbody>
       </table>
     </div>

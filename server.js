@@ -75,6 +75,41 @@ function tgSend(chatId, text) {
 }
 function notifyTelegram(text) { return tgSend(TG_CHAT_ID, text); }
 
+// ─────────── Защита клиента: инциденты (дамп/крэк/дебаггер/репак) ───────────
+// Клиент бьёт сюда при срабатывании детектора. Токен общий с классовым
+// стримингом — публичный репо, значение только в env на Render. Пусто = приём
+// инцидентов открыт всем (dev): на проде задай ZEPHYR_PROTECT_SECRET.
+const PROTECT_SECRET = process.env.ZEPHYR_PROTECT_SECRET || '';
+// Карантинные (подменённые) классы. Для помеченного «тихим режимом» аккаунта
+// класс-стриминг отдаёт их вместо настоящих. Пусто = каталога нет, карантин
+// молча отдаёт обычные классы (лучше, чем 500).
+const QUARANTINE_DIR = process.env.ZEPHYR_QUARANTINE_DIR
+  ? path.resolve(process.env.ZEPHYR_QUARANTINE_DIR)
+  : path.join(PAYLOAD_DIR, '_quarantine');
+
+// Телеграм с инлайн-кнопками (обычный notifyTelegram их не умеет).
+function notifyTelegramKb(text, inlineKeyboard) {
+  if (!TG_BOT_TOKEN || !TG_CHAT_ID) return Promise.resolve();
+  return fetch('https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: TG_CHAT_ID, text, parse_mode: 'HTML', disable_web_page_preview: true,
+      reply_markup: { inline_keyboard: inlineKeyboard }
+    })
+  }).catch(() => {});
+}
+
+// Человекочитаемые названия того, что поймали.
+const INCIDENT_KIND = {
+  dump:     '🧨 Дамп классов из памяти',
+  crack:    '🔓 Попытка крэка / обход лицензии',
+  debugger: '🐞 Подключён отладчик / агент',
+  repack:   '📦 Репак jar (изменён билд)',
+  inject:   '💉 Сторонний агент/инъекция',
+  mapping:  '🗺️ Снятие маппингов'
+};
+function incidentKindLabel(kind) { return INCIDENT_KIND[kind] || ('⚠️ ' + kind); }
+
 // ── Отдельный бот ПОДДЕРЖКИ (свой токен, свой вебхук) ──
 const SUPPORT_BOT_TOKEN = process.env.SUPPORT_BOT_TOKEN || '';
 const SUPPORT_WEBHOOK_SECRET = process.env.SUPPORT_WEBHOOK_SECRET || '';
@@ -502,6 +537,18 @@ app.get('/api/launcher/class', async (req, res) => {
 
     const name = String(req.query.name || '');
     if (!/^[A-Za-z0-9._$]+$/.test(name)) return res.sendStatus(400); // заодно рубит traversal
+
+    // Тихий карантин: помеченному аккаунту отдаём подменённый класс, если он
+    // есть в _quarantine. Клиент этого не замечает — просто получает «рабочий»
+    // на вид класс с испорченной логикой. Нет подменного файла — обычный.
+    if (user.quarantine) {
+      const q = path.resolve(QUARANTINE_DIR, name);
+      if (path.dirname(q) === QUARANTINE_DIR && fs.existsSync(q)) {
+        res.set('Content-Type', 'application/octet-stream');
+        return res.send(fs.readFileSync(q));
+      }
+    }
+
     const f = path.resolve(PAYLOAD_DIR, name);
     if (path.dirname(f) !== PAYLOAD_DIR) return res.sendStatus(400);
     if (!fs.existsSync(f)) return res.sendStatus(404);
@@ -511,6 +558,57 @@ app.get('/api/launcher/class', async (req, res) => {
   } catch (e) { console.error(e); res.sendStatus(500); }
 });
 
+// ── Инцидент защиты: клиент поймал дампер/крэк/дебаггер и т.п. ──
+// Аутентификация — той же launcher-сессией (Bearer), что и класс-стриминг:
+// так мы точно знаем аккаунт и HWID, а токен не гуляет отдельной сущностью.
+app.post('/api/protect/incident', async (req, res) => {
+  try {
+    if (PROTECT_SECRET && req.headers['x-zephyr-secret'] !== PROTECT_SECRET) return res.sendStatus(403);
+    const auth = req.headers.authorization || '';
+    if (!auth.startsWith('Bearer ')) return res.status(401).json({ ok: false });
+    const sess = await db.findLauncherSession(auth.slice(7));
+    if (!sess) return res.status(401).json({ ok: false });
+    const user = await db.findById(sess.userId);
+    if (!user) return res.status(401).json({ ok: false });
+
+    const kind = String((req.body && req.body.kind) || 'unknown').slice(0, 24);
+    const detail = String((req.body && req.body.detail) || '').slice(0, 500);
+    const version = String((req.body && req.body.version) || '').slice(0, 40);
+    const uid = accountUid(user);
+
+    const rec = await db.recordIncident({ userId: user.id, uid, hwid: sess.hwid, kind, detail, version });
+    // Первый же инцидент помечает аккаунт — виден в кабинете и в админке.
+    if (!user.flagged) await db.updateUser(user.id, { flagged: true });
+
+    const repeat = rec.total > 1 ? ('\n🔁 <b>Повторно</b> (' + rec.total + '-й инцидент)') : '';
+    const quar = user.quarantine ? '\n🕳 Уже в тихом карантине' : '';
+    notifyTelegramKb(
+      '🚨 <b>Zephyr · инцидент защиты</b>\n' +
+      incidentKindLabel(kind) + '\n\n' +
+      'Аккаунт: <b>' + esc(user.username) + '</b> (UID ' + uid + ')\n' +
+      'Профиль: ' + SITE_URL + '/admin?u=' + encodeURIComponent(user.username) + '\n' +
+      'HWID: <code>' + esc(sess.hwid || '—') + '</code>\n' +
+      (detail ? 'Детали: ' + esc(detail) + '\n' : '') +
+      (version ? 'Версия: ' + esc(version) + '\n' : '') +
+      'Время (МСК): ' + new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', hour12: false }) +
+      repeat + quar,
+      protectKeyboard(rec.id)
+    );
+    res.json({ ok: true });
+  } catch (e) { console.error('incident', e); res.status(500).json({ ok: false }); }
+});
+
+// Инлайн-клавиатура выбора реакции на инцидент (callback_data ≤ 64 байт).
+function protectKeyboard(incidentId) {
+  const b = (label, act) => ({ text: label, callback_data: 'pi:' + act + ':' + incidentId });
+  return [
+    [b('🔨 Бан навсегда', 'ban'), b('⏸ Заморозка 7д', 'freeze7')],
+    [b('⏸ Заморозка 24ч', 'freeze1'), b('🔑 Сбросить HWID', 'hwid')],
+    [b('🕳 Тихий карантин', 'quar'), b('👁 Пометить и следить', 'watch')],
+    [b('✅ Ложное срабатывание', 'clear')]
+  ];
+}
+
 // ── Telegram-бот (webhook): только админ создаёт промокоды ──
 app.get('/api/tg/webhook', (req, res) => res.json({ ok: true })); // проверка живости
 app.post('/api/tg/webhook', async (req, res) => {
@@ -519,6 +617,17 @@ app.post('/api/tg/webhook', async (req, res) => {
   }
   res.sendStatus(200); // Telegram ждёт быстрый 200
   try {
+    // Нажата кнопка под карточкой инцидента.
+    const cq = req.body && req.body.callback_query;
+    if (cq) {
+      const chatId = String(cq.message && cq.message.chat && cq.message.chat.id || '');
+      if (TG_ADMIN_ID && chatId === TG_ADMIN_ID && String(cq.data || '').startsWith('pi:')) {
+        await handleProtectAction(cq);
+      } else {
+        await tgApi(TG_BOT_TOKEN, 'answerCallbackQuery', { callback_query_id: cq.id });
+      }
+      return;
+    }
     const msg = req.body && req.body.message;
     if (!msg || !msg.text || !msg.chat) return;
     const chatId = String(msg.chat.id);
@@ -526,6 +635,56 @@ app.post('/api/tg/webhook', async (req, res) => {
     await handlePromoWizard(chatId, msg.text);
   } catch (e) { console.error('tg webhook', e); }
 });
+
+// Применяет выбранную реакцию на инцидент и дописывает в карточку итог.
+async function handleProtectAction(cq) {
+  const [, action, incidentId] = String(cq.data).split(':');
+  const inc = incidentId ? await db.getIncident(incidentId) : null;
+  const ack = (text) => tgApi(TG_BOT_TOKEN, 'answerCallbackQuery', { callback_query_id: cq.id, text });
+  if (!inc) { await ack('Инцидент не найден'); return; }
+  const user = await db.findById(inc.userId);
+  if (!user) { await ack('Аккаунт не найден'); return; }
+
+  let verdict;
+  switch (action) {
+    case 'ban':
+      await db.updateUser(user.id, { bannedUntil: new Date(Date.UTC(BAN_FOREVER_YEAR, 0, 1)).toISOString(), flagged: true });
+      verdict = '🔨 Забанен навсегда'; break;
+    case 'freeze7':
+      await db.updateUser(user.id, { bannedUntil: new Date(Date.now() + 7 * 864e5).toISOString(), flagged: true });
+      verdict = '⏸ Заморожен на 7 дней'; break;
+    case 'freeze1':
+      await db.updateUser(user.id, { bannedUntil: new Date(Date.now() + 864e5).toISOString(), flagged: true });
+      verdict = '⏸ Заморожен на 24 часа'; break;
+    case 'hwid':
+      await db.updateUser(user.id, { hwid: null });
+      verdict = '🔑 HWID сброшен'; break;
+    case 'quar':
+      await db.updateUser(user.id, { quarantine: true, flagged: true });
+      verdict = '🕳 Тихий карантин включён'; break;
+    case 'watch':
+      await db.updateUser(user.id, { flagged: true });
+      verdict = '👁 Помечен, следим'; break;
+    case 'clear':
+      await db.updateUser(user.id, { flagged: false, quarantine: false });
+      verdict = '✅ Ложное срабатывание, метки сняты'; break;
+    default:
+      await ack('Неизвестное действие'); return;
+  }
+  await db.setIncidentAction(inc.id, action);
+  await ack(verdict);
+
+  // Карточку не переписываем целиком (там HWID/детали) — дополняем вердиктом и
+  // убираем кнопки, чтобы не нажать дважды.
+  const orig = (cq.message && cq.message.text) || '';
+  const who = cq.from && (cq.from.username ? '@' + cq.from.username : cq.from.first_name) || 'админ';
+  await tgApi(TG_BOT_TOKEN, 'editMessageText', {
+    chat_id: String(cq.message.chat.id), message_id: cq.message.message_id,
+    parse_mode: 'HTML', disable_web_page_preview: true,
+    text: orig + '\n\n— — —\n<b>' + esc(verdict) + '</b>\nрешение: ' + esc(who),
+    reply_markup: { inline_keyboard: [] }
+  });
+}
 
 // ── Бот ПОДДЕРЖКИ (отдельный токен): юзер -> пересылка админу -> ответ свайпом -> юзеру ──
 app.get('/api/tg/support', (req, res) => res.json({ ok: true }));
@@ -949,12 +1108,16 @@ app.get('/admin', requireAdmin, async (req, res, next) => {
       now: new Date().toISOString()
     };
     const launches = await db.getLaunches(50);
+    const incidents = await db.getIncidents(50);
+    stats.flagged = users.filter(u => u.flagged).length;
     res.render('admin', {
       page: 'admin',
       stats,
       users: users.slice(0, 50),
       orders: orders.slice(0, 50),
       launches,
+      incidents,
+      incidentKindFn: incidentKindLabel,
       isAdminFn: isAdmin,
       isBannedFn: isBanned,
       uidFn: accountUid
@@ -1011,6 +1174,22 @@ app.post('/admin/ban/:userId', requireAdmin, async (req, res, next) => {
 app.post('/admin/unban/:userId', requireAdmin, async (req, res, next) => {
   try {
     await db.updateUser(req.params.userId, { bannedUntil: null });
+    res.redirect('/admin');
+  } catch (e) { next(e); }
+});
+
+// снять/поставить метку подозрения и тихий карантин вручную из админки
+app.post('/admin/flag/:userId', requireAdmin, async (req, res, next) => {
+  try {
+    const on = req.body.on === '1' || req.body.on === 'true';
+    await db.updateUser(req.params.userId, { flagged: on, ...(on ? {} : { quarantine: false }) });
+    res.redirect('/admin');
+  } catch (e) { next(e); }
+});
+app.post('/admin/quarantine/:userId', requireAdmin, async (req, res, next) => {
+  try {
+    const on = req.body.on === '1' || req.body.on === 'true';
+    await db.updateUser(req.params.userId, { quarantine: on, ...(on ? { flagged: true } : {}) });
     res.redirect('/admin');
   } catch (e) { next(e); }
 });
