@@ -467,7 +467,13 @@ app.get('/healthz', (req, res) => res.status(200).json({ ok: true, service: 'zep
 // ───────────────────── Лаунчер ─────────────────────
 // Страница, которую грузит нативный webview-шелл. Отдельный статик-файл,
 // не EJS: он самодостаточный и общается с нативом через WebView2-мост.
-app.get('/launcher', (req, res) => res.sendFile(path.join(__dirname, 'views', 'launcher.html')));
+app.get('/launcher', (req, res) => {
+  // WebView2 кэширует агрессивно — без no-store игрок после обновления сайта
+  // видел бы старую страницу (застревал на «Проверка…»). Страница лёгкая,
+  // грузить её заново каждый запуск не жалко.
+  res.set('Cache-Control', 'no-store, must-revalidate');
+  res.sendFile(path.join(__dirname, 'views', 'launcher.html'));
+});
 
 // Логин из лаунчера теми же кредами, что на сайте. Привязывает HWID к аккаунту.
 app.post('/api/launcher/auth', async (req, res) => {
