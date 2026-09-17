@@ -6,149 +6,228 @@
 <title>Zephyr</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="/js/theme.js"></script>
+<!-- Тот же CSS, что и у сайта: лаунчер — это страница сайта в WebView, поэтому
+     он должен быть неотличим от сайта, а не жить своим оформлением. -->
+<link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/themes.css">
+<link rel="stylesheet" href="/css/zephyr.css">
 <style>
-  /* Дизайн сайта Zephyr: Inter + палитра #090a0f + акцент из themes.css (violet/ice/acid/ember).
-     launcher.css грузится ниже и уточняет .card/.field/.btn — цвета берём из общих токенов. */
-  :root{
-    --ink:#eeeef5; --muted:#a1a2b5; --muted-2:#818297;
-    --bg:#090a0f; --inset:#0c0d14; --danger:#e97b87;
-  }
-  *{box-sizing:border-box}
+  /* Поверх сайтовых токенов — только специфичное для окна лаунчера:
+     фреймлесс-перетаскивание, компактная раскладка, два экрана. Цвета, шрифты и
+     кнопки берём из style.css как есть. */
   html,body{height:100%}
   body{
-    margin:0; color:var(--ink);
-    background:radial-gradient(ellipse at 50% 22%,rgba(var(--accent-rgb),.08),transparent 62%),var(--bg);
-    font:14px/1.5 Inter,system-ui,sans-serif;
+    margin:0; overflow:hidden; -webkit-user-select:none; user-select:none;
     display:flex; align-items:center; justify-content:center;
-    -webkit-user-select:none; user-select:none; overflow:hidden;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% -8%, rgba(139,92,246,.18), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 90% 100%, rgba(90,43,216,.12), transparent 72%),
+      linear-gradient(160deg,#0a0812,#07060d 55%,#06050a);
   }
-  /* перетаскивание окна за верх (натив ловит .drag через инжектированный шим) */
-  .drag{-webkit-app-region:drag; position:fixed; top:0; left:0; right:0; height:56px}
-  .close{
-    -webkit-app-region:no-drag; position:fixed; top:14px; right:16px; width:30px; height:30px;
-    border:0; background:transparent; color:var(--muted-2); font-size:15px; cursor:pointer;
-    border-radius:9px; transition:background .15s,color .15s; z-index:2;
+  .drag{-webkit-app-region:drag; position:fixed; inset:0 0 auto 0; height:54px; z-index:1}
+  .win-btns{position:fixed; top:12px; right:14px; display:flex; gap:6px; z-index:3; -webkit-app-region:no-drag}
+  .win-btns button{
+    width:30px; height:30px; border:0; border-radius:9px; cursor:pointer;
+    background:rgba(255,255,255,.05); color:var(--muted-2,#8a8a93); font-size:14px;
+    display:grid; place-items:center; transition:background .15s,color .15s;
   }
-  .close:hover{background:rgba(255,255,255,.06); color:var(--ink)}
-  .close:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+  .win-btns button:hover{background:rgba(255,255,255,.1); color:var(--ink,#eee)}
 
-  .card{
-    width:min(360px,calc(100% - 40px)); padding:36px 34px; text-align:center;
-    border:1px solid rgba(255,255,255,.1); border-radius:22px;
-    background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.016));
-    box-shadow:0 28px 80px #0006, inset 0 1px 0 #ffffff10;
-    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
-    animation:enter .42s cubic-bezier(.2,.7,.2,1) both;
+  .shell{
+    position:relative; z-index:2; width:min(384px,calc(100% - 28px));
+    padding:34px 30px 26px; text-align:center;
+    border:1px solid var(--line,rgba(191,167,255,.16)); border-radius:24px;
+    background:linear-gradient(150deg,rgba(24,20,38,.72),rgba(12,10,22,.66));
+    box-shadow:0 40px 90px rgba(4,2,12,.6), inset 0 1px 0 rgba(255,255,255,.06);
+    backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
   }
-  @keyframes enter{from{opacity:0; transform:translateY(12px)} to{opacity:1; transform:none}}
 
-  .logo{
-    width:56px; height:56px; border-radius:16px; margin:0 auto 16px; display:block;
-    border:1px solid rgba(255,255,255,.12); box-shadow:0 0 34px rgba(var(--accent-rgb),.14);
-  }
-  .wordmark{font-size:26px; font-weight:700; letter-spacing:-.02em; margin:0}
-  .sub{font-size:9px; color:var(--accent); letter-spacing:.34em; text-transform:uppercase; margin:7px 0 30px}
+  .brandline{display:flex; align-items:center; justify-content:center; gap:11px; margin-bottom:4px}
+  .brandline img{width:40px; height:40px; border-radius:12px; box-shadow:0 0 26px rgba(139,92,246,.35)}
+  .brandline b{font-size:23px; font-weight:800; letter-spacing:-.02em}
+  .brandline b span{color:var(--violet-light,#bfa7ff)}
+  .tagline{font-size:9px; letter-spacing:.34em; text-transform:uppercase; color:var(--violet-light,#bfa7ff); margin:6px 0 24px}
+
+  .view{animation:pop .4s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes pop{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+  [hidden]{display:none!important}
 
   .field{
-    display:flex; align-items:center; height:46px; margin:11px 0;
-    background:var(--inset); border:1px solid rgba(255,255,255,.12); border-radius:11px;
+    display:flex; align-items:center; height:48px; margin:10px 0;
+    background:rgba(8,7,15,.7); border:1px solid var(--line,rgba(191,167,255,.16)); border-radius:12px;
     transition:border-color .18s, box-shadow .18s;
   }
-  .field:focus-within{border-color:var(--accent); box-shadow:0 0 0 3px rgba(var(--accent-rgb),.1)}
-  .field input{
-    flex:1; min-width:0; height:100%; padding:0 15px; border:0; outline:0; background:transparent;
-    color:var(--ink); font:14px Inter,sans-serif;
+  .field:focus-within{border-color:var(--violet,#8b5cf6); box-shadow:0 0 0 3px rgba(139,92,246,.14)}
+  .field input{flex:1; min-width:0; height:100%; padding:0 15px; border:0; outline:0; background:transparent; color:var(--ink,#f4f0ff); font:14px Inter,sans-serif}
+  .field input::placeholder{color:var(--muted-2,#746b8a)}
+  .field .eye{-webkit-app-region:no-drag; background:none; border:0; color:var(--muted-2,#746b8a); cursor:pointer; padding:0 13px; font-size:14px}
+
+  .cta{
+    width:100%; min-height:50px; margin-top:16px; border-radius:13px; cursor:pointer;
+    border:1px solid rgba(221,205,255,.28);
+    background:linear-gradient(135deg,#7040e8,#9558f6); color:#fff; font:720 14px Inter,sans-serif;
+    box-shadow:0 16px 42px rgba(117,67,231,.3), inset 0 1px rgba(255,255,255,.24);
+    position:relative; overflow:hidden; transition:transform .18s, box-shadow .18s, filter .18s;
   }
-  .field input::placeholder{color:var(--muted-2)}
+  .cta:hover{transform:translateY(-1px); box-shadow:0 20px 50px rgba(117,67,231,.4)}
+  .cta:active{transform:translateY(1px)}
+  .cta:disabled{filter:grayscale(.5) brightness(.7); cursor:default; transform:none}
+  .cta.big{min-height:58px; font-size:15px; letter-spacing:.01em}
+  .cta.ghost{background:rgba(15,12,24,.6); border-color:var(--line,rgba(191,167,255,.2)); box-shadow:none; color:#d2ccdc; font-weight:600}
+  .cta.ghost:hover{background:rgba(113,67,218,.14); color:#fff; box-shadow:none}
 
-  .btn{
-    width:100%; height:46px; margin-top:18px; border:0; border-radius:11px; cursor:pointer;
-    background:var(--accent); color:var(--on-accent); font:650 13px Inter,sans-serif;
-    letter-spacing:.01em; box-shadow:0 6px 26px rgba(var(--accent-rgb),.14);
-    transition:background .18s, transform .18s, box-shadow .18s;
-  }
-  .btn:hover{background:var(--accent-hi); transform:translateY(-1px); box-shadow:0 8px 32px rgba(var(--accent-rgb),.24)}
-  .btn:active{transform:translateY(1px) scale(.99)}
-  .btn:disabled{background:rgba(255,255,255,.06); color:var(--muted-2); cursor:default; box-shadow:none; transform:none}
-  .btn:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
-
-  .status{min-height:18px; margin-top:16px; font-size:12px; color:var(--muted); line-height:1.6; overflow-wrap:anywhere}
-  .status.err{color:var(--danger)}
-  .status.ok{color:var(--accent-hi)}
-
-  .bar{height:3px; margin-top:14px; border-radius:2px; background:var(--inset); overflow:hidden; opacity:0; transition:opacity .2s}
+  .status{min-height:18px; margin-top:14px; font-size:12px; color:var(--muted,#a9a1bc); line-height:1.55; overflow-wrap:anywhere}
+  .status.err{color:var(--danger,#e97b87)}
+  .status.ok{color:var(--violet-light,#bfa7ff)}
+  .bar{height:3px; margin-top:12px; border-radius:2px; background:rgba(8,7,15,.8); overflow:hidden; opacity:0; transition:opacity .2s}
   .bar.on{opacity:1}
-  .bar > i{display:block; height:100%; width:38%; background:var(--accent); border-radius:2px; animation:slide 1s linear infinite}
-  @keyframes slide{from{transform:translateX(-110%)} to{transform:translateX(320%)}}
+  .bar>i{display:block; height:100%; width:40%; background:linear-gradient(90deg,transparent,var(--violet,#8b5cf6),transparent); animation:slide 1.05s linear infinite}
+  @keyframes slide{from{transform:translateX(-120%)} to{transform:translateX(320%)}}
 
-  .foot{position:fixed; bottom:16px; left:0; right:0; text-align:center; font-size:10px; color:var(--muted-2); letter-spacing:.14em; pointer-events:none}
+  /* ── главное меню (после входа) ── */
+  .account{
+    display:flex; align-items:center; gap:12px; text-align:left;
+    padding:13px 14px; margin-bottom:16px;
+    background:rgba(8,7,15,.55); border:1px solid var(--line,rgba(191,167,255,.16)); border-radius:14px;
+  }
+  .account .av{
+    width:42px; height:42px; border-radius:12px; flex:0 0 auto; overflow:hidden;
+    display:grid; place-items:center; font-weight:800; font-size:17px; color:#fff;
+    background:linear-gradient(135deg,#7040e8,#5a2bd8); box-shadow:0 0 22px rgba(139,92,246,.3);
+  }
+  .account .av img{width:100%; height:100%; object-fit:cover}
+  .account .who{min-width:0; flex:1}
+  .account .who .nm{font-weight:700; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .account .who .sub{font-size:11px; color:var(--muted,#a9a1bc); margin-top:2px}
+  .account .who .sub b{color:var(--violet-light,#bfa7ff); font-weight:600}
 
-  @media(prefers-reduced-motion:reduce){.card,.bar>i,.btn{animation:none; transition:none}}
+  .metarow{display:flex; gap:9px; margin-bottom:14px}
+  .meta{
+    flex:1; padding:10px 12px; text-align:left; border-radius:12px;
+    background:rgba(8,7,15,.5); border:1px solid var(--line,rgba(191,167,255,.14));
+  }
+  .meta .k{font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted-2,#746b8a)}
+  .meta .v{font-size:13px; font-weight:600; margin-top:3px}
+
+  .row2{display:flex; gap:9px; margin-top:10px}
+  .row2 .cta{margin-top:0}
+
+  .foot{margin-top:16px; font-size:10px; letter-spacing:.12em; color:var(--muted-2,#746b8a)}
 </style>
-<link rel="stylesheet" href="/css/launcher.css">
 </head>
 <body>
   <div class="drag"></div>
-  <button class="close" onclick="nativeClose()" aria-label="Закрыть">✕</button>
-
-  <div class="card">
-    <img class="logo launcher-logo" src="/img/zephyr-avatar.jpg" width="56" height="56" alt="">
-    <h1 class="wordmark">Zephyr</h1>
-    <div class="sub">Client</div>
-
-    <form id="f" autocomplete="off">
-      <div class="field"><input id="user" placeholder="Логин или email" autocomplete="off"></div>
-      <div class="field"><input id="pass" type="password" placeholder="Пароль" autocomplete="off"></div>
-      <button class="btn" id="go" type="submit">Войти</button>
-    </form>
-
-    <div class="bar" id="bar"><i></i></div>
-    <div class="status" id="status"></div>
+  <div class="win-btns">
+    <button id="min" title="Свернуть" aria-label="Свернуть">—</button>
+    <button id="close" title="Закрыть" aria-label="Закрыть">✕</button>
   </div>
 
-  <div class="foot" id="foot">v1.0</div>
+  <div class="shell">
+    <div class="brandline">
+      <img src="/img/zephyr-avatar.jpg" alt="">
+      <b>Zephyr<span>.</span></b>
+    </div>
+    <div class="tagline">Client Launcher</div>
+
+    <!-- ЭКРАН 1: вход -->
+    <section class="view" id="viewLogin">
+      <form id="f" autocomplete="off">
+        <div class="field"><input id="user" placeholder="Логин или email" autocomplete="off"></div>
+        <div class="field">
+          <input id="pass" type="password" placeholder="Пароль" autocomplete="off">
+          <button type="button" class="eye" id="eye" tabindex="-1" aria-label="Показать пароль">◡</button>
+        </div>
+        <button class="cta" id="go" type="submit">Войти</button>
+      </form>
+      <div class="bar" id="bar"><i></i></div>
+      <div class="status" id="status"></div>
+    </section>
+
+    <!-- ЭКРАН 2: главное меню -->
+    <section class="view" id="viewHome" hidden>
+      <div class="account">
+        <div class="av" id="homeAv">Z</div>
+        <div class="who">
+          <div class="nm" id="homeName">—</div>
+          <div class="sub" id="homeSub">Подписка активна</div>
+        </div>
+      </div>
+      <div class="metarow">
+        <div class="meta"><div class="k">UID</div><div class="v" id="homeUid">—</div></div>
+        <div class="meta"><div class="k">Версия</div><div class="v">1.21.11</div></div>
+      </div>
+      <button class="cta big" id="play" type="button">▶  Играть</button>
+      <div class="row2">
+        <button class="cta ghost" id="site" type="button">Открыть сайт</button>
+        <button class="cta ghost" id="logout" type="button">Выйти</button>
+      </div>
+      <div class="bar" id="bar2"><i></i></div>
+      <div class="status" id="status2"></div>
+    </section>
+
+    <div class="foot" id="foot">v1.0</div>
+  </div>
 
 <script>
-  const inWebView2 = !!(window.chrome && window.chrome.webview);
+  const inWV = !!(window.chrome && window.chrome.webview);
   const $ = id => document.getElementById(id);
+  const post = m => { if (inWV) window.chrome.webview.postMessage(m); };
 
-  function setStatus(text, cls){ const s=$('status'); s.textContent=text; s.className='status '+(cls||''); }
-  function busy(on){ $('go').disabled=on; $('bar').classList.toggle('on',on); }
-  function nativeClose(){ if(inWebView2) window.chrome.webview.postMessage({type:'close'}); }
+  function show(which){
+    $('viewLogin').hidden = which !== 'login';
+    $('viewHome').hidden  = which !== 'home';
+  }
+  function setStatus(t,c,el){ el=el||$('status'); el.textContent=t; el.className='status '+(c||''); }
+  function busy(on,barId){ const b=$(barId||'bar'); b.classList.toggle('on',on); }
 
-  // Натив присылает статус (успех/ошибка авторизации, ход запуска)
-  if(inWebView2){
+  $('eye').addEventListener('click', ()=>{ const p=$('pass'); p.type = p.type==='password'?'text':'password'; });
+
+  $('close').addEventListener('click', ()=>post({type:'close'}));
+  $('min').addEventListener('click',   ()=>post({type:'minimize'}));
+  $('site').addEventListener('click',  ()=>post({type:'openSite'}));
+  $('logout').addEventListener('click',()=>{ show('login'); $('pass').value=''; setStatus('',''); post({type:'logout'}); });
+  $('play').addEventListener('click', ()=>{ $('play').disabled=true; busy(true,'bar2'); setStatus('Запуск игры…','',$('status2')); post({type:'play'}); });
+
+  if (inWV){
     window.chrome.webview.addEventListener('message', e=>{
       const m = e.data || {};
-      if(m.type==='status'){ busy(!!m.busy); setStatus(m.text, m.kind); }
+      if (m.type==='status'){
+        const home = !$('viewHome').hidden;
+        busy(!!m.busy, home?'bar2':'bar');
+        setStatus(m.text, m.kind, home?$('status2'):$('status'));
+        $('go').disabled=!!m.busy;
+      }
+      else if (m.type==='authed'){
+        $('go').disabled=false; busy(false);
+        $('homeName').textContent = m.username || 'Игрок';
+        $('homeUid').textContent  = m.uid || '—';
+        if (m.sub) $('homeSub').innerHTML = m.sub;
+        const av=$('homeAv');
+        if (m.avatar){ av.innerHTML='<img src="'+m.avatar+'" alt="">'; }
+        else { av.textContent = (m.username||'Z').charAt(0).toUpperCase(); }
+        show('home');
+      }
+      else if (m.type==='version' && m.text){ $('foot').textContent = m.text; }
     });
+    post({type:'ready'});
   }
 
   $('f').addEventListener('submit', async ev=>{
     ev.preventDefault();
     const user=$('user').value.trim(), pass=$('pass').value;
     if(!user||!pass){ setStatus('Введите логин и пароль','err'); return; }
-    busy(true); setStatus('Проверка…');
-
-    if(inWebView2){
-      // натив сам сделает auth с HWID и запустит игру; токен/ключ в JS не попадают
-      window.chrome.webview.postMessage({type:'login', user, pass});
-      return;
-    }
-    // режим обычного браузера — предпросмотр дизайна + проверка backend сайта
+    $('go').disabled=true; busy(true); setStatus('Проверка…');
+    if(inWV){ post({type:'login', user, pass}); return; }
+    // dev-режим в обычном браузере: показать, что бэкенд отвечает
     try{
-      const r = await fetch('/api/launcher/auth', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({login:user, password:pass, hwid:'DEV-HWID'})
-      });
-      const j = await r.json();
-      busy(false);
-      if(j.ok) setStatus('Авторизовано (dev-режим, без нативного запуска)','ok');
+      const r=await fetch('/api/launcher/auth',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({login:user,password:pass,hwid:'DEV-HWID'})});
+      const j=await r.json(); busy(false); $('go').disabled=false;
+      if(j.ok){ $('homeName').textContent=j.username||user; $('homeUid').textContent=j.uid||'—'; show('home'); }
       else setStatus(j.message||'Отказано','err');
-    }catch(e){ busy(false); setStatus('Сервер недоступен','err'); }
+    }catch(e){ busy(false); $('go').disabled=false; setStatus('Сервер недоступен','err'); }
   });
 </script>
 </body>
