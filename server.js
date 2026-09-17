@@ -83,9 +83,13 @@ const PROTECT_SECRET = process.env.ZEPHYR_PROTECT_SECRET || '';
 // Карантинные (подменённые) классы. Для помеченного «тихим режимом» аккаунта
 // класс-стриминг отдаёт их вместо настоящих. Пусто = каталога нет, карантин
 // молча отдаёт обычные классы (лучше, чем 500).
-const QUARANTINE_DIR = process.env.ZEPHYR_QUARANTINE_DIR
-  ? path.resolve(process.env.ZEPHYR_QUARANTINE_DIR)
-  : path.join(PAYLOAD_DIR, '_quarantine');
+// PAYLOAD_DIR объявлен ниже по файлу, поэтому путь вычисляем лениво — const в
+// TDZ падал бы на старте (Cannot access 'PAYLOAD_DIR' before initialization).
+function quarantineDir() {
+  return process.env.ZEPHYR_QUARANTINE_DIR
+    ? path.resolve(process.env.ZEPHYR_QUARANTINE_DIR)
+    : path.join(PAYLOAD_DIR, '_quarantine');
+}
 
 // Телеграм с инлайн-кнопками (обычный notifyTelegram их не умеет).
 function notifyTelegramKb(text, inlineKeyboard) {
@@ -549,8 +553,9 @@ app.get('/api/launcher/class', async (req, res) => {
     // есть в _quarantine. Клиент этого не замечает — просто получает «рабочий»
     // на вид класс с испорченной логикой. Нет подменного файла — обычный.
     if (user.quarantine) {
-      const q = path.resolve(QUARANTINE_DIR, name);
-      if (path.dirname(q) === QUARANTINE_DIR && fs.existsSync(q)) {
+      const qdir = quarantineDir();
+      const q = path.resolve(qdir, name);
+      if (path.dirname(q) === qdir && fs.existsSync(q)) {
         res.set('Content-Type', 'application/octet-stream');
         return res.send(fs.readFileSync(q));
       }
