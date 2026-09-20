@@ -281,5 +281,61 @@
     "start": "Quick start",
     "ready": "Your next session.",
     "launch": "Make it Zephyr."
+  },
+  "rebuild": {
+    "eyebrow": "ZEPHYR CLIENT / MINECRAFT 1.21.11",
+    "title1": "Your game.",
+    "title2": "Your rules.",
+    "intro": "Arrange your interface, configure modules and switch profiles. Zephyr puts the controls in your hands.",
+    "choose": "Choose access",
+    "look": "Explore the client",
+    "preview": "See what’s inside first.",
+    "preview_sub": "The client and launcher, shown in actual development screenshots.",
+    "features": "Made to be yours.",
+    "features_sub": "From individual modules to your HUD layout. Choose what your game needs.",
+    "ft": [
+      "Modules that fit.",
+      "Movement and settings.",
+      "Your HUD, your layout.",
+      "A profile for your server."
+    ],
+    "fd": [
+      "Enable the functions you need and build your own configuration.",
+      "Adjust the client to your play style. Compatibility changes as anti-cheats are updated.",
+      "Keybinds, armour, totems and media: move elements and resize them.",
+      "Use profiles for FunTime, ReallyWorld, HolyWorld and SpookyTime 1.21."
+    ],
+    "servers": "Server profiles",
+    "start": "From account to game.",
+    "start_sub": "Three steps to get started with the client.",
+    "st": [
+      "Create an account",
+      "Choose a duration",
+      "Launch the client"
+    ],
+    "sd": [
+      "One account for access, keys and security settings.",
+      "Choose a plan and arrange access on the purchase page.",
+      "Open your account, download the loader and follow the installation instructions."
+    ],
+    "pricing": "Choose how long you play.",
+    "pricing_sub": "Every plan includes the client modules. Compare duration, updates and support.",
+    "duration": "Access",
+    "included": "What’s included",
+    "cost": "Price",
+    "trial": "Want to start small?",
+    "trial_cta": "Trial access from 1 day",
+    "faq": "Before your first launch.",
+    "faq_sub": "Installation, compatibility and purchase terms.",
+    "question": "Still have a question?",
+    "contact": "Contact support",
+    "outro": "Your next game.",
+    "outro2": "Your way.",
+    "auth_title": "All yours.\nAll in one place.",
+    "auth_text": "Client access, keys and account security.",
+    "auth_note": "Sign in to continue.",
+    "register_note": "Create an account to purchase and manage access.",
+    "footer": "Make the game yours.",
+    "days": "days"
   }
 }

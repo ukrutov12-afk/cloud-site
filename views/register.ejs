@@ -1,15 +1,11 @@
 <%- include('partials/header', { pageTitle: 'Zephyr - ' + t('auth.register_title') }) %>
 
 <section class="auth-page section-shell register-page">
-  <div class="auth-visual" aria-hidden="true">
-    <div class="auth-orbit"></div>
-    <img src="/img/zephyr-avatar.jpg" alt="">
-    <span>Create your Zephyr identity</span>
-  </div>
+  <div class="auth-story"><span class="overline">ZEPHYR / ACCOUNT</span><h2><%= t('rebuild.auth_title') %></h2><p><%= t('rebuild.auth_text') %></p><img src="/img/client-preview.png" alt="<%= t('design.client_screen') %>"></div>
   <div class="auth-card">
     <span class="auth-kicker"><%= t('nav.register') %></span>
     <h1><%= t('auth.register_title') %></h1>
-    <p>Zephyr ID · Secure session · Personal account</p>
+    <p><%= t('rebuild.register_note') %></p>
     <form action="/register" method="post" class="auth-form" data-loading-form>
       <label><span><%= t('auth.username') %></span><input type="text" name="username" value="<%= form.username || '' %>" required autocomplete="username" minlength="2" maxlength="24" autofocus></label>
       <label><span><%= t('auth.email') %></span><input type="email" name="email" value="<%= form.email || '' %>" required autocomplete="email"></label>
