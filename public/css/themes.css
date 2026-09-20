@@ -1,4 +1,4 @@
-:root{color-scheme:dark;--accent:#6e74e3;--accent-hi:#9297f3;--accent-rgb:110,116,227;--accent-deep:#4d53bb;--on-accent:#000000}
+:root{color-scheme:dark;--accent:#e36eb7;--accent-hi:#f392cf;--accent-rgb:227,110,183;--accent-deep:#bb4d92;--on-accent:#000000}
 :root[data-theme="ice"]{--accent:#65dfec;--accent-hi:#b0f2f7;--accent-rgb:101,223,236;--accent-deep:#228c9b;--on-accent:#061b20}
 :root[data-theme="acid"]{--accent:#c3eb73;--accent-hi:#e2ffb1;--accent-rgb:195,235,115;--accent-deep:#708e30;--on-accent:#141d08}
 :root[data-theme="ember"]{--accent:#ffac85;--accent-hi:#ffd4bf;--accent-rgb:255,172,133;--accent-deep:#b65b38;--on-accent:#26130b}

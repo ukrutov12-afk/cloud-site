@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="/css/style.css?v=2">
 <link rel="stylesheet" href="/css/themes.css?v=2">
 <link rel="stylesheet" href="/css/zephyr.css?v=2">
-  <link rel="stylesheet" href="/css/premium.css?v=4">
+  <link rel="stylesheet" href="/css/premium.css?v=5">
 <style>
   /* Поверх сайтовых токенов — только специфичное для окна лаунчера:
      фреймлесс-перетаскивание, компактная раскладка, два экрана. Цвета, шрифты и
@@ -21,9 +21,9 @@
     margin:0; overflow:hidden; -webkit-user-select:none; user-select:none;
     display:flex; align-items:center; justify-content:center;
     background:
-      radial-gradient(ellipse 70% 50% at 50% -8%, rgba(139,92,246,.18), transparent 70%),
-      radial-gradient(ellipse 60% 40% at 90% 100%, rgba(90,43,216,.12), transparent 72%),
-      linear-gradient(160deg,#0a0812,#07060d 55%,#06050a);
+      radial-gradient(ellipse 70% 50% at 50% -8%, rgba(246, 92, 168,.18), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 90% 100%, rgba(216, 43, 130,.12), transparent 72%),
+      linear-gradient(160deg,#12080d,#0d060a 55%,#0a0508);
   }
   .drag{-webkit-app-region:drag; position:fixed; inset:0 0 auto 0; height:54px; z-index:1}
   .win-btns{position:fixed; top:12px; right:14px; display:flex; gap:6px; z-index:3; -webkit-app-region:no-drag}
@@ -45,10 +45,10 @@
   }
 
   .brandline{display:flex; align-items:center; justify-content:center; gap:11px; margin-bottom:4px}
-  .brandline img{width:40px; height:40px; border-radius:12px; box-shadow:0 0 26px rgba(139,92,246,.35)}
+  .brandline img{width:40px; height:40px; border-radius:12px; box-shadow:0 0 26px rgba(246, 92, 168,.35)}
   .brandline b{font-size:23px; font-weight:800; letter-spacing:-.02em}
-  .brandline b span{color:var(--violet-light,#bfa7ff)}
-  .tagline{font-size:9px; letter-spacing:.34em; text-transform:uppercase; color:var(--violet-light,#bfa7ff); margin:6px 0 24px}
+  .brandline b span{color:var(--violet-light,#ffa7d3)}
+  .tagline{font-size:9px; letter-spacing:.34em; text-transform:uppercase; color:var(--violet-light,#ffa7d3); margin:6px 0 24px}
 
   .view{animation:pop .4s cubic-bezier(.2,.8,.2,1) both}
   @keyframes pop{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
@@ -56,65 +56,65 @@
 
   .field{
     display:flex; align-items:center; height:48px; margin:10px 0;
-    background:rgba(8,7,15,.7); border:1px solid var(--line,rgba(191,167,255,.16)); border-radius:12px;
+    background:rgba(15, 7, 11,.7); border:1px solid var(--line,rgba(255, 167, 211,.16)); border-radius:12px;
     transition:border-color .18s, box-shadow .18s;
   }
-  .field:focus-within{border-color:var(--violet,#8b5cf6); box-shadow:0 0 0 3px rgba(139,92,246,.14)}
-  .field input{flex:1; min-width:0; height:100%; padding:0 15px; border:0; outline:0; background:transparent; color:var(--ink,#f4f0ff); font:14px Inter,sans-serif}
-  .field input::placeholder{color:var(--muted-2,#746b8a)}
-  .field .eye{-webkit-app-region:no-drag; background:none; border:0; color:var(--muted-2,#746b8a); cursor:pointer; padding:0 13px; font-size:14px}
+  .field:focus-within{border-color:var(--violet,#f65ca8); box-shadow:0 0 0 3px rgba(246, 92, 168,.14)}
+  .field input{flex:1; min-width:0; height:100%; padding:0 15px; border:0; outline:0; background:transparent; color:var(--ink,#fff0f8); font:14px Inter,sans-serif}
+  .field input::placeholder{color:var(--muted-2,#8a6b7a)}
+  .field .eye{-webkit-app-region:no-drag; background:none; border:0; color:var(--muted-2,#8a6b7a); cursor:pointer; padding:0 13px; font-size:14px}
 
   .cta{
     width:100%; min-height:50px; margin-top:16px; border-radius:13px; cursor:pointer;
-    border:1px solid rgba(221,205,255,.28);
-    background:linear-gradient(135deg,#7040e8,#9558f6); color:#fff; font:720 14px Inter,sans-serif;
-    box-shadow:0 16px 42px rgba(117,67,231,.3), inset 0 1px rgba(255,255,255,.24);
+    border:1px solid rgba(255, 205, 229,.28);
+    background:linear-gradient(135deg,#e84094,#f658a1); color:#fff; font:720 14px Inter,sans-serif;
+    box-shadow:0 16px 42px rgba(231, 67, 148,.3), inset 0 1px rgba(255,255,255,.24);
     position:relative; overflow:hidden; transition:transform .18s, box-shadow .18s, filter .18s;
   }
-  .cta:hover{transform:translateY(-1px); box-shadow:0 20px 50px rgba(117,67,231,.4)}
+  .cta:hover{transform:translateY(-1px); box-shadow:0 20px 50px rgba(231, 67, 148,.4)}
   .cta:active{transform:translateY(1px)}
   .cta:disabled{filter:grayscale(.5) brightness(.7); cursor:default; transform:none}
   .cta.big{min-height:58px; font-size:15px; letter-spacing:.01em}
-  .cta.ghost{background:rgba(15,12,24,.6); border-color:var(--line,rgba(191,167,255,.2)); box-shadow:none; color:#d2ccdc; font-weight:600}
-  .cta.ghost:hover{background:rgba(113,67,218,.14); color:#fff; box-shadow:none}
+  .cta.ghost{background:rgba(24, 12, 18,.6); border-color:var(--line,rgba(255, 167, 211,.2)); box-shadow:none; color:#dcccd3; font-weight:600}
+  .cta.ghost:hover{background:rgba(218, 67, 141,.14); color:#fff; box-shadow:none}
 
-  .status{min-height:18px; margin-top:14px; font-size:12px; color:var(--muted,#a9a1bc); line-height:1.55; overflow-wrap:anywhere}
+  .status{min-height:18px; margin-top:14px; font-size:12px; color:var(--muted,#bca1ae); line-height:1.55; overflow-wrap:anywhere}
   .status.err{color:var(--danger,#e97b87)}
-  .status.ok{color:var(--violet-light,#bfa7ff)}
-  .bar{height:3px; margin-top:12px; border-radius:2px; background:rgba(8,7,15,.8); overflow:hidden; opacity:0; transition:opacity .2s}
+  .status.ok{color:var(--violet-light,#ffa7d3)}
+  .bar{height:3px; margin-top:12px; border-radius:2px; background:rgba(15, 7, 11,.8); overflow:hidden; opacity:0; transition:opacity .2s}
   .bar.on{opacity:1}
-  .bar>i{display:block; height:100%; width:40%; background:linear-gradient(90deg,transparent,var(--violet,#8b5cf6),transparent); animation:slide 1.05s linear infinite}
+  .bar>i{display:block; height:100%; width:40%; background:linear-gradient(90deg,transparent,var(--violet,#f65ca8),transparent); animation:slide 1.05s linear infinite}
   @keyframes slide{from{transform:translateX(-120%)} to{transform:translateX(320%)}}
 
   /* ── главное меню (после входа) ── */
   .account{
     display:flex; align-items:center; gap:12px; text-align:left;
     padding:13px 14px; margin-bottom:16px;
-    background:rgba(8,7,15,.55); border:1px solid var(--line,rgba(191,167,255,.16)); border-radius:14px;
+    background:rgba(15, 7, 11,.55); border:1px solid var(--line,rgba(255, 167, 211,.16)); border-radius:14px;
   }
   .account .av{
     width:42px; height:42px; border-radius:12px; flex:0 0 auto; overflow:hidden;
     display:grid; place-items:center; font-weight:800; font-size:17px; color:#fff;
-    background:linear-gradient(135deg,#7040e8,#5a2bd8); box-shadow:0 0 22px rgba(139,92,246,.3);
+    background:linear-gradient(135deg,#e84094,#d82b82); box-shadow:0 0 22px rgba(246, 92, 168,.3);
   }
   .account .av img{width:100%; height:100%; object-fit:cover}
   .account .who{min-width:0; flex:1}
   .account .who .nm{font-weight:700; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .account .who .sub{font-size:11px; color:var(--muted,#a9a1bc); margin-top:2px}
-  .account .who .sub b{color:var(--violet-light,#bfa7ff); font-weight:600}
+  .account .who .sub{font-size:11px; color:var(--muted,#bca1ae); margin-top:2px}
+  .account .who .sub b{color:var(--violet-light,#ffa7d3); font-weight:600}
 
   .metarow{display:flex; gap:9px; margin-bottom:14px}
   .meta{
     flex:1; padding:10px 12px; text-align:left; border-radius:12px;
-    background:rgba(8,7,15,.5); border:1px solid var(--line,rgba(191,167,255,.14));
+    background:rgba(15, 7, 11,.5); border:1px solid var(--line,rgba(255, 167, 211,.14));
   }
-  .meta .k{font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted-2,#746b8a)}
+  .meta .k{font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted-2,#8a6b7a)}
   .meta .v{font-size:13px; font-weight:600; margin-top:3px}
 
   .row2{display:flex; gap:9px; margin-top:10px}
   .row2 .cta{margin-top:0}
 
-  .foot{margin-top:16px; font-size:10px; letter-spacing:.12em; color:var(--muted-2,#746b8a)}
+  .foot{margin-top:16px; font-size:10px; letter-spacing:.12em; color:var(--muted-2,#8a6b7a)}
 </style>
 </head>
 <body class="launcher-surface">
