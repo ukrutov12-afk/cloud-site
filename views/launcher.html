@@ -4,15 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zephyr</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/fonts.css">
 <script src="/js/theme.js"></script>
 <!-- Тот же CSS, что и у сайта: лаунчер — это страница сайта в WebView, поэтому
      он должен быть неотличим от сайта, а не жить своим оформлением. -->
 <link rel="stylesheet" href="/css/style.css?v=2">
 <link rel="stylesheet" href="/css/themes.css?v=2">
 <link rel="stylesheet" href="/css/zephyr.css?v=2">
+  <link rel="stylesheet" href="/css/premium.css?v=3">
 <style>
   /* Поверх сайтовых токенов — только специфичное для окна лаунчера:
      фреймлесс-перетаскивание, компактная раскладка, два экрана. Цвета, шрифты и
@@ -118,7 +117,7 @@
   .foot{margin-top:16px; font-size:10px; letter-spacing:.12em; color:var(--muted-2,#746b8a)}
 </style>
 </head>
-<body>
+<body class="launcher-surface">
   <div class="drag"></div>
   <div class="win-btns">
     <button id="min" title="Свернуть" aria-label="Свернуть">—</button>
